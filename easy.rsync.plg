@@ -1,0 +1,88 @@
+<?xml version="1.0" standalone="yes"?>
+<!DOCTYPE PLUGIN [
+  <!ENTITY repoName   "easy-rsync">
+  <!ENTITY pluginName "easy.rsync">
+  <!ENTITY gitUser    "Teknicallity">
+  <!ENTITY version    "2025.02.02">
+  <!ENTITY suffix     "-alpha1">
+  <!ENTITY gitURL     "https://github.com/&gitUser;/&repoName;/raw/main">
+  <!ENTITY pluginURL  "https://raw.githubusercontent.com/&gitUser;/&repoName;/main/&pluginName;.plg">
+  <!ENTITY launch     "Settings/EasyRsync">
+  <!ENTITY plugin     "/boot/config/plugins/&pluginName;">
+  <!ENTITY emhttp     "/usr/local/emhttp/plugins/&pluginName;">
+  <!ENTITY md5        "089fa15289feba8e9abc8c8ec4b4c9b8">
+]>
+<PLUGIN name="&pluginName;" 
+        author="Teknicallity" 
+        version="&version;" 
+        launch="&launch;" 
+        pluginURL="&pluginURL;" 
+        min="6.9.0" 
+        support="http://forums.unraid.net/index.php?topic=36543.0">
+
+<CHANGES>
+## &pluginName;
+
+### 2025.02.02
+- Initial commit
+
+</CHANGES>
+
+<!--Download image-->
+<FILE Name="&emhttp;/images/hello-world.png">
+<URL>https://raw.githubusercontent.com/&gitUser;/&repoName;/main/images/hello-world.png</URL>
+</FILE>
+
+<!--Remove previous tarballs-->
+<FILE Run="/bin/bash">
+<INLINE>
+rm -f $(ls /boot/config/plugins/&pluginName;/&pluginName;-*.txz 2&gt;/dev/null | grep -v '&version;')
+echo "remove old tarballs. Version: &version;"
+</INLINE>
+</FILE>
+
+<!--The install script.-->
+<FILE Name="/boot/config/plugins/&pluginName;/&pluginName;-&version;&suffix;.txz" Run="upgradepkg --install-new">
+<URL>&gitURL;/archive/&pluginName;-&version;&suffix;.txz</URL>
+<MD5>&md5;</MD5>
+</FILE>
+
+<!--create plugin README.md file-->
+<FILE Name="&emhttp;/README.md">
+<INLINE>
+**Easy Rsync**
+
+Backup specified shares to a remote location using rsync.
+</INLINE>
+</FILE>
+
+<!--Additional echo text-->
+<FILE Run="/bin/bash">
+<INLINE>
+echo "enabled"
+
+#Check if Kernel Module is already enabled
+
+echo
+echo "----Installation of Intel GPU TOP complete-----"
+</INLINE>
+</FILE>
+
+<!--The 'remove' script.-->
+<FILE Run="/bin/bash" Method="remove">
+<INLINE>
+echo "-----------------------------------------------"
+echo "----------Uninstalling Intel GPU TOP-----------"
+echo "-----------------------------------------------"
+# Remove plugin related files
+removepkg &pluginName;-&version;
+rm -rf &emhttp;
+rm -rf &plugin;
+echo
+echo "-----------------------------------------------"
+echo "---Uninstallation of Intel GPU TOP complete!---"
+echo "-----------------------------------------------"
+echo
+</INLINE>
+</FILE>
+</PLUGIN>
