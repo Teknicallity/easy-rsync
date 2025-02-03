@@ -3,15 +3,14 @@
   <!ENTITY repoName   "easy-rsync">
   <!ENTITY pluginName "easy.rsync">
   <!ENTITY gitUser    "Teknicallity">
-  <!ENTITY version    "2025.02.02">
-  <!ENTITY suffix     "-alpha1">
+  <!ENTITY version    "2025.02.02-a1">
   <!ENTITY gitBranch  "dev">
   <!ENTITY gitURL     "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY pluginURL  "https://raw.githubusercontent.com/&gitUser;/&repoName;/&gitBranch;/&pluginName;.plg">
   <!ENTITY launch     "Settings/EasyRsync">
   <!ENTITY plugin     "/boot/config/plugins/&pluginName;">
   <!ENTITY emhttp     "/usr/local/emhttp/plugins/&pluginName;">
-  <!ENTITY md5        "127a53b7b3a2b262d65d64a943a088e3">
+  <!ENTITY md5        "295e835b6c58a7407d0e36b049607ba3">
 ]>
 <PLUGIN name="&pluginName;" 
         author="Teknicallity" 
@@ -43,8 +42,8 @@ echo "remove old tarballs. Version: &version;"
 </FILE>
 
 <!--The install script.-->
-<FILE Name="/boot/config/plugins/&pluginName;/&pluginName;-&version;&suffix;.txz" Run="upgradepkg --install-new">
-<URL>&gitURL;/archive/&pluginName;-&version;&suffix;.txz</URL>
+<FILE Name="/boot/config/plugins/&pluginName;/&pluginName;-&version;.txz" Run="upgradepkg --install-new">
+<URL>&gitURL;/archive/&pluginName;-&version;.txz</URL>
 <MD5>&md5;</MD5>
 </FILE>
 
@@ -76,7 +75,7 @@ echo "-----------------------------------------------"
 echo "----------Uninstalling Intel GPU TOP-----------"
 echo "-----------------------------------------------"
 # Remove plugin related files
-removepkg &pluginName;-&version;&suffix;
+removepkg &pluginName;-&version;
 rm -rf &emhttp;
 rm -rf &plugin;
 echo
