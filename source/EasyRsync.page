@@ -15,7 +15,7 @@ require_once "$docroot/webGui/include/Translations.php";
 require_once "$docroot/webGui/include/Helpers.php";
 
 $unbalanced_cfg = parse_plugin_cfg("unbalanced");
-echo $unbalanced_cfg
+print_r($unbalanced_cfg)
 ?>
 
 <script>
