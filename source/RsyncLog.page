@@ -10,45 +10,54 @@ $docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
 require_once "$docroot/webGui/include/Translations.php";
 require_once "$docroot/webGui/include/Helpers.php";
 
-echo "exec";
-$output = [];
-$return_var = 0;
-$command = 'ls -la';
-exec($command, $output, $return_var);
+require_once __DIR__ ."/include/ERSettings.php";
 
-if ($return_var === 0) {
-    echo "Command executed successfully:\n";
-    print_r($output);
-} else {
-    echo "Error executing command. Return code: $return_var\n";
-}
-
-echo "\n\nshell_exec";
-$command = 'ls -la';
-$output = shell_exec($command);
-
-echo "<pre>$output</pre>";
-
-
-echo "\n\nsystem";
-$command = 'ls -la';
-$return_var = 0;
-system($command, $return_var);
-
-if ($return_var === 0) {
-    echo "Command executed successfully.\n";
-} else {
-    echo "Error executing command. Return code: $return_var\n";
-}
-
-
-echo "\n\npassthru";
-$command = 'ls -la';
-$return_var = passthru($command);
-
-if ($return_var === 0) {
-    echo "Command executed successfully.\n";
-} else {
-    echo "Error executing command. Return code: $return_var\n";
-}
 ?>
+
+<h3>The backup is <span id="backupStatusText" class=""></span>.</h3>
+<div style='border: 1px solid red; height:500px; overflow:auto;' id='logFrame'>Loading...</div>
+<input type='button' id="abortBtn" value='Abort' disabled/>
+<p id="didContainer" style="display: none; width: 200px;">Your debug log ID: <input type="text" id="did" onmouseover="$(this).select()"/></p>
+
+<script>
+    const url = "/plugins/<?= ERSettings::$appName ?>/include/HttpHelper.php";
+
+    document.addEventListener("DOMContentLoaded", function () {
+        setInterval(checkBackup, 1000);
+
+        const abortBtn = document.getElementById('abortBtn');
+        abortBtn.addEventListener('click', function () {
+            if (confirm("Are you sure you want to abort?")) {
+                fetch(url, { method: 'POST', body: new URLSearchParams({ action: 'abort' }) })
+                    .catch(error => console.error('Error:', error));
+            }
+        });
+
+        function checkBackup() {
+            fetch(url, { method: 'POST', body: new URLSearchParams({ action: 'getBackupState' }) })
+                .then(response => response.json())
+                .then(data => {
+                    const logDiv = document.getElementById('logFrame');
+                    if (data.log === "") {
+                        logDiv.textContent = "The log is not existing or empty";
+                    } else {
+                        logDiv.textContent = data.log;
+                    }
+
+                    const backupStatusText = document.getElementById('backupStatusText');
+                    if (data.running) {
+                        backupStatusText.className = 'backupRunning';
+                        abortBtn.disabled = false;
+                    } else {
+                        backupStatusText.className = 'backupNotRunning';
+                        abortBtn.disabled = true;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('logFrame').textContent = "Something went wrong while talking to the backend :(";
+                });
+        }
+    });
+
+</script>

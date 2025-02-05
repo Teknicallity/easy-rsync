@@ -14,8 +14,21 @@ $docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
 require_once "$docroot/webGui/include/Translations.php";
 require_once "$docroot/webGui/include/Helpers.php";
 
-$unbalanced_cfg = parse_plugin_cfg("unbalanced");
-print_r($unbalanced_cfg)
+try {
+  $unbalanced_cfg = parse_plugin_cfg("unbalanced");
+  print_r($unbalanced_cfg);
+} catch (Exception $e) {
+  print_r($e->getMessage());
+}
+
+/*
+Take list of directories to backup
+take remote backup host and path
+
+call rsync helper
+
+*/
+include "/usr/local/emhttp/plugins/easy.rsync/pages/settings.php";
 ?>
 
 <script>

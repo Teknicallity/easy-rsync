@@ -1,0 +1,54 @@
+Menu="EasyRsync"
+Title="Exec"
+---
+<?PHP
+$plugin = 'easy.rsync';
+
+// Set document root for Unraid environment.
+$docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
+// Include Unraid's GUI helper functions.
+require_once "$docroot/webGui/include/Translations.php";
+require_once "$docroot/webGui/include/Helpers.php";
+
+echo "exec";
+$output = [];
+$return_var = 0;
+$command = 'ls -la';
+exec($command, $output, $return_var);
+
+if ($return_var === 0) {
+    echo "Command executed successfully:\n";
+    print_r($output);
+} else {
+    echo "Error executing command. Return code: $return_var\n";
+}
+
+echo "\n\nshell_exec";
+$command = 'ls -la';
+$output = shell_exec($command);
+
+echo "<pre>$output</pre>";
+
+
+echo "\n\nsystem";
+$command = 'ls -la';
+$return_var = 0;
+system($command, $return_var);
+
+if ($return_var === 0) {
+    echo "Command executed successfully.\n";
+} else {
+    echo "Error executing command. Return code: $return_var\n";
+}
+
+
+echo "\n\npassthru";
+$command = 'ls -la';
+$return_var = passthru($command);
+
+if ($return_var === 0) {
+    echo "Command executed successfully.\n";
+} else {
+    echo "Error executing command. Return code: $return_var\n";
+}
+?>
