@@ -1,0 +1,6 @@
+Menu="EasyRsync:1"
+Title="Settings"
+---
+<?php
+include "/usr/local/emhttp/plugins/easy.rsync/pages/settings.php";
+?>

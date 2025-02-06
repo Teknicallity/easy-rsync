@@ -1,9 +1,22 @@
 <?php
+require_once "/usr/local/emhttp/plugins/easy.rsync/include/ERSettings.php";
 
 use unraid\plugins\EasyRsync\ERSettings;
 
-echo "settings";
+echo "\nsettings\n";
 
+if (class_exists('unraid\plugins\EasyRsync\ERSettings')) {
+    echo "ERSettings class is loaded successfully.\n";
+} else {
+    die("ERSettings class not found. Please check your autoloading configuration.");
+}
+
+try {
+    $appName = ERSettings::$appName;
+    echo "/plugins/" . $appName . "/include/http_handler.php\n";
+} catch (Exception $e) {
+    die("Error: " . $e->getMessage());
+}
 ?>
 
 <div>

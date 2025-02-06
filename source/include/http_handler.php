@@ -3,9 +3,9 @@
 require_once __DIR__ . "/LogHandler.php";
 use unraid\plugins\EasyRsync\LogHandler;
 
-if (isset($_GET['action']) || isset($_POST['action'])) {
+if ((isset($_GET['action']) && !isset($_POST['action'])) || (isset($_POST['action']) && !isset($_GET['action']))) {
     $action = $_GET['action'] ?? $_POST['action'];
-
+    
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         handlePostAction($action);
     } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
@@ -14,7 +14,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
         sendError('Invalid request method', 405); // Method Not Allowed
     }
 } else {
-    sendError('No action specified', 400); // Bad Request
+    sendError('No action specified or both GET and POST actions are set', 400); // Bad Request
 }
 
 function handlePostAction(string $action) {
@@ -23,7 +23,8 @@ function handlePostAction(string $action) {
             // handleAbortAction();
             break;
         case 'manualBackup':
-            exec('php ' . dirname(__DIR__) . 'scripts/rsync_backup.php > /dev/null &');
+            exec('php ' . dirname(__DIR__) . '/scripts/rsync_backup.php > /dev/null &');
+            sendResponse(['msg' => 'Starting sync']);
             break;
         default:
             sendError('Invalid post action: ' . htmlspecialchars($action), 400);
@@ -32,8 +33,6 @@ function handlePostAction(string $action) {
 
 function handleGetAction(string $action) {
     switch ($action) {
-        // get ER log
-        // get rsync log
         case 'getBackupStatus':
             try {
                 $status = LogHandler::getBackupStatus();
@@ -84,6 +83,7 @@ function sendError(string $msg, int $code = 404) {
     http_response_code($code); // Set the HTTP status code.
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['msg' => $msg]);
+    exit();
 }
 
 function sendResponse(array $data, int $code = 200) {

@@ -1,4 +1,4 @@
-Menu="EasyRsync"
+Menu="EasyRsync:3"
 Title="Rsync Log"
 ---
 <?PHP
@@ -12,6 +12,7 @@ require_once "$docroot/webGui/include/Helpers.php";
 
 require_once __DIR__ ."/include/ERSettings.php";
 
+use unraid\plugins\EasyRsync\ERSettings;
 ?>
 
 <h3>The backup is <span id="backupStatusText" class=""></span>.</h3>
