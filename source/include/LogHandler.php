@@ -10,7 +10,7 @@ use Exception;
 class LogHandler {
     public static function getBackupStatus() {
         // Logic to get backup status
-        return "Backup Status";
+        return "Backup Status 1";
     }
 
     public static function getPluginLog() {

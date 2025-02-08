@@ -3,18 +3,23 @@
 require_once __DIR__ . "/LogHandler.php";
 use unraid\plugins\EasyRsync\LogHandler;
 
-if ((isset($_GET['action']) && !isset($_POST['action'])) || (isset($_POST['action']) && !isset($_GET['action']))) {
-    $action = $_GET['action'] ?? $_POST['action'];
-    
-    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        handlePostAction($action);
-    } elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
-        handleGetAction($action);
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $input = file_get_contents('php://input');
+    $data = json_decode($input, true);
+
+    if (isset($data['action'])) {
+        handlePostAction($_POST['action']);
     } else {
-        sendError('Invalid request method', 405); // Method Not Allowed
+        sendError('No action specified', 400); // Bad Request
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    if (isset($_GET['action'])) {
+        handleGetAction($_GET['action']);
+    } else {
+        sendError('No action specified', 400); // Bad Request
     }
 } else {
-    sendError('No action specified or both GET and POST actions are set', 400); // Bad Request
+    sendError('Invalid request method', 405); // Method Not Allowed
 }
 
 function handlePostAction(string $action) {
@@ -38,7 +43,7 @@ function handleGetAction(string $action) {
                 $status = LogHandler::getBackupStatus();
                 
                 $data = [
-                    'status'=> $status,
+                    'status' => $status,
                 ];
                 sendResponse($data);
             } catch (Exception $e) {
@@ -52,7 +57,7 @@ function handleGetAction(string $action) {
                 
                 $data = [
                     'log' => $log,
-                    'status'=> $status,
+                    'status' => $status,
                 ];
                 sendResponse($data);
             } catch (Exception $e) {
@@ -63,10 +68,10 @@ function handleGetAction(string $action) {
             try {
                 $log = LogHandler::getRsyncLog();
                 $status = LogHandler::getBackupStatus();
-
+                
                 $data = [
                     'log' => $log,
-                    'status'=> $status,
+                    'status' => $status,
                 ];
                 sendResponse($data);
             } catch (Exception $e) {
@@ -75,7 +80,6 @@ function handleGetAction(string $action) {
             break;
         default:
             sendError('Invalid get action: ' . htmlspecialchars($action), 400);
-            break;
     }
 }
 
