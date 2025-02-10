@@ -8,12 +8,11 @@ class ERSettings {
     public static $configDir = '/boot/config/plugins/easy.rsync';
     public static $pathsFile = 'backup_paths.json';
     public static $cronFile = 'easy-rsync.cron';
-
     public static $tempFolder = '/tmp/easy.rsync';
     public static $logFile = 'easy-rsync.log';
     public static $rsyncLogFile = 'rsync.log';
-    public static $stateRsyncRunning = 'running';
-    public static $stateRsyncAborted = 'aborted';
+    public static $stateRsyncRunningFile = 'running';
+    public static $stateRsyncAbortedFile = 'aborted';
     public static $emhttpVars = '/var/local/emhttp/var.ini';
 
     public static function getConfigFilePath() {
@@ -29,11 +28,11 @@ class ERSettings {
     }
 
     public static function getStateRsyncRunningFilePath() {
-        return self::$tempFolder . '/' . self::$stateRsyncRunning;
+        return self::$tempFolder . '/' . self::$stateRsyncRunningFile;
     }
 
     public static function getStateRsyncAbortedFilePath() {
-        return self::$tempFolder . '/' . self::$stateRsyncAborted;
+        return self::$tempFolder . '/' . self::$stateRsyncAbortedFile;
     }
 
     private static function savePaths(array $paths) {

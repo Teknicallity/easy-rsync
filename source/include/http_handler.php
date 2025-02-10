@@ -1,13 +1,11 @@
 <?php
 
 require_once __DIR__ . "/LogHandler.php";
+
 use unraid\plugins\EasyRsync\LogHandler;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $input = file_get_contents('php://input');
-    $data = json_decode($input, true);
-
-    if (isset($data['action'])) {
+    if (isset($_POST['action'])) {
         handlePostAction($_POST['action']);
     } else {
         sendError('No action specified', 400); // Bad Request
@@ -22,10 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     sendError('Invalid request method', 405); // Method Not Allowed
 }
 
-function handlePostAction(string $action) {
+function handlePostAction(string $action): void {
     switch ($action) {
         case 'abort':
             // handleAbortAction();
+            exec('logger er abort');
+            sendResponse(['msg' => 'Abort Success']);
             break;
         case 'manualBackup':
             // exec('php ' . dirname(__DIR__) . '/scripts/rsync_backup.php > /dev/null &');
@@ -37,7 +37,7 @@ function handlePostAction(string $action) {
     }
 }
 
-function handleGetAction(string $action) {
+function handleGetAction(string $action): void {
     switch ($action) {
         case 'getBackupStatus':
             try {
@@ -51,7 +51,7 @@ function handleGetAction(string $action) {
                 sendError('Failed to get backup status: ' . htmlspecialchars($e->getMessage()), 500);
             }
             break;
-        case 'getLog':
+        case 'getPluginLog':
             try {
                 $log = LogHandler::getPluginLog();
                 $status = LogHandler::getBackupStatus();
@@ -84,14 +84,14 @@ function handleGetAction(string $action) {
     }
 }
 
-function sendError(string $msg, int $code = 404) {
+function sendError(string $error, int $code = 404): void {
     http_response_code($code); // Set the HTTP status code.
     header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(['msg' => $msg]);
+    echo json_encode(['error' => $error]);
     exit();
 }
 
-function sendResponse(array $data, int $code = 200) {
+function sendResponse(array $data, int $code = 200): void {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data);

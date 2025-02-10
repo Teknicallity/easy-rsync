@@ -17,24 +17,24 @@ class Logger {
     }
 
     public function logDebug(string $message): void {
-        LogHandler::writeToLog("[Debug] " . $message);
+        LogHandler::writeToPluginLog("[Debug] " . $message);
     }
 
     public function logInfo(string $message): void {
         if ($this->logLevel >= LogLevel::INFO) {
-            LogHandler::writeToLog("[Info] " . $message);
+            LogHandler::writeToPluginLog("[Info] " . $message);
         }
     }
 
     public function logWarning(string $message): void {
         if ($this->logLevel >= LogLevel::WARNING) {
-            LogHandler::writeToLog("[Warning] " . $message);
+            LogHandler::writeToPluginLog("[Warning] " . $message);
         }
     }
 
     public function logError(string $message): void {
         if ($this->logLevel >= LogLevel::ERROR) {
-            LogHandler::writeToLog("[Error] " . $message);
+            LogHandler::writeToPluginLog("[Error] " . $message);
         }
     }
 

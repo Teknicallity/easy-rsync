@@ -8,21 +8,27 @@ use Exception;
 
 
 class LogHandler {
-    public static function getBackupStatus() {
+    public static function getBackupStatus(): string {
         // Logic to get backup status
-        return "Backup Status 1";
+        return "stopped";
     }
 
-    public static function getPluginLog() {
+    public static function getPluginLog(): string {
         $logFile = ERSettings::getLogFilePath();
         return self::getLogContents($logFile);
     }
 
-    public static function getRsyncLog() {
+    public static function getRsyncLog(): string {
         $logFile = ERSettings::getRsyncLogFilePath();
         return self::getLogContents($logFile);
     }
 
+    /**
+     * Retrieves and formats the contents of a log file.
+     * @param string $logFilePath The path to the log file.
+     * @return string The formatted content of the log file.
+     * @throws Exception If the specified log file does not exist.
+     */
     private static function getLogContents(string $logFilePath): string {
         if (!file_exists($logFilePath)) {
             throw new Exception("The log file at path {$logFilePath} does not exist.");
@@ -31,7 +37,27 @@ class LogHandler {
         return nl2br(file_get_contents($logFilePath));
     }
 
-    public static function writeToLog(string $message) {
-        file_put_contents(ERSettings::getLogFilePath(), $message . PHP_EOL, FILE_APPEND);
+    /**
+     * Writes a message to the log file. Creates the log file if it doesn't already exist.
+     * @param string $message The message to be written to the log.
+     * @throws Exception If there is an error writing to or creating the log file.
+     */
+    public static function writeToPluginLog(string $message): void {
+        $logFilePath = ERSettings::getLogFilePath();
+
+        // Open the log file in append mode, creating it if necessary
+        $handle = fopen($logFilePath, 'a');
+        if ($handle === false) {
+            throw new Exception("Failed to open or create the log file at path {$logFilePath}");
+        }
+
+        try {
+            // Write the message to the log file
+            fwrite($handle, $message . PHP_EOL);
+        } catch (Exception $e) {
+            throw new Exception("Error writing to log file: " . $e->getMessage());
+        } finally {
+            fclose($handle);  // Ensure the file is closed properly
+        }
     }
 }

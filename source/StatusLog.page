@@ -1,13 +1,6 @@
 Menu="EasyRsync:2"
 Title="Status/Log"
 ---
-<?PHP
-$plugin = 'easy.rsync';
-
-// Set document root for Unraid environment.
-$docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
-// Include Unraid's GUI helper functions.
-require_once "$docroot/webGui/include/Translations.php";
-require_once "$docroot/webGui/include/Helpers.php";
-
+<?php
+include "/usr/local/emhttp/plugins/easy.rsync/pages/status_log.php";
 ?>
