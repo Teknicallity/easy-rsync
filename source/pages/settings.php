@@ -22,7 +22,8 @@ try {
 <div>
     <button id="manualBackupButtonJS">Manual BackupJS</button>
     <button id="manualBackupButton">Manual BackupJQuery</button>
-    <button id="getBackupStatus">Get Status</button>
+    <button id="getBackupStatusJS">Get StatusJS</button>
+    <button id="getBackupStatus">Get StatusJQuery</button>
     <div id="backupStatusDisplay"></div>
 </div>
 
@@ -38,6 +39,7 @@ try {
             $.post({
                 url: postUrl,
                 contentType: 'application/json',
+                csrf: '<?=$var['csrf_token']?>',
                 data: data,
                 success: function(response) {
                     console.log('Success:', response);
@@ -56,6 +58,8 @@ try {
         const fullUrl = `${url}?action=getBackupStatus`;
 
         $('#getBackupStatus').on('click', function(){
+            console.log('clicked getBackupStatusJQuery');
+            
             $.get(fullUrl, function(data) {
                 console.log('Response:', data);
                 // You can handle the response data here
@@ -75,6 +79,8 @@ try {
     const manualBackupButtonJS = document.getElementById('manualBackupButtonJS');
     let u = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";
     manualBackupButtonJS.addEventListener('click', () => {
+        console.log('javascript manualBackupButton');
+        
         fetch(u, {
             method: 'POST',
             headers: {
@@ -88,6 +94,26 @@ try {
         })
         .catch((error) => {
             console.error('Error: ', error);
-        })
-    })
+        });
+    });
+
+    const getBackupStatusJS = document.getElementById('getBackupStatusJS');
+    let ur = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php?action=getBackupStatus";
+    getBackupStatusJS.addEventListener('click', () => {
+        console.log('getstatus javascript');
+        
+        fetch(ur)
+            .then(response => {
+                if (!response.ok) { // Check for response errors
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();  // Correctly parse JSON from the response
+            })
+            .then(data => {
+                console.log('Data:', data);  // Log parsed data here
+            })
+            .catch((error) => {
+                console.error('Error: ', error);
+            });
+    });
 </script>
