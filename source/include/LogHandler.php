@@ -33,7 +33,7 @@ class LogHandler {
      */
     private static function getLogContents(string $logFilePath): string {
         if (!file_exists($logFilePath)) {
-            throw new Exception("The log file at path {$logFilePath} does not exist.");
+            return nl2br("Log file does not exist");
         }
         
         return nl2br(file_get_contents($logFilePath));

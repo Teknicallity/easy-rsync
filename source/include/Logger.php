@@ -20,23 +20,25 @@ class Logger {
     }
 
     public function logDebug(string $message): void {
-        LogHandler::writeToPluginLog("[Debug] " . $message);
+        if ($this->logLevel->value <= LogLevel::DEBUG->value) {
+            LogHandler::writeToPluginLog("[Debug] " . $message);
+        }
     }
 
     public function logInfo(string $message): void {
-        if ($this->logLevel >= LogLevel::INFO) {
+        if ($this->logLevel->value <= LogLevel::INFO->value) {
             LogHandler::writeToPluginLog("[Info] " . $message);
         }
     }
 
     public function logWarning(string $message): void {
-        if ($this->logLevel >= LogLevel::WARNING) {
+        if ($this->logLevel->value <= LogLevel::WARNING->value) {
             LogHandler::writeToPluginLog("[Warning] " . $message);
         }
     }
 
     public function logError(string $message): void {
-        if ($this->logLevel >= LogLevel::ERROR) {
+        if ($this->logLevel->value <= LogLevel::ERROR->value) {
             LogHandler::writeToPluginLog("[Error] " . $message);
         }
     }

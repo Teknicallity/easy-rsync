@@ -19,7 +19,7 @@ use unraid\plugins\EasyRsync\ERSettings;
     const urlRsync = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";
 
     document.addEventListener("DOMContentLoaded", function () {
-        setInterval(checkBackupRsync, 5000);
+        setInterval(checkBackupRsync, 1000);
 
         // Still loaded from status_log
         // const abortBtn = document.getElementById('abortBtn');
@@ -38,7 +38,7 @@ use unraid\plugins\EasyRsync\ERSettings;
         const rsyngLogDiv = document.getElementById('rsyngLogFrame');
 
         $.get(`${urlRsync}?action=getRsyncLog`, function (data) {
-            console.log(data);
+            // console.log(data);
 
             if (data.log === "") {
                 rsyngLogDiv.innerHTML = "<p>The log does not exist or is empty</p>";

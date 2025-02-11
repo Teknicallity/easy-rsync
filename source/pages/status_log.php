@@ -28,7 +28,7 @@ use unraid\plugins\EasyRsync\ERSettings;
     const urlStatus = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";
 
     document.addEventListener("DOMContentLoaded", function () {
-        setInterval(checkBackupStatus, 5000);
+        setInterval(checkBackupStatus, 1000);
 
         $('.abortBtn').on('click', function () {
             $.post(urlStatus, {
@@ -47,7 +47,7 @@ use unraid\plugins\EasyRsync\ERSettings;
         const abortBtnElements = document.querySelectorAll('.abortBtn');
 
         $.get(`${urlStatus}?action=getPluginLog`, function (data) {
-            console.log(data);
+            // console.log(data);
 
             if (data.log === "") {
                 statusLogDiv.innerHTML = "<p>The log does not exist or is empty</p>";

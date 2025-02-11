@@ -2,3 +2,4 @@
 /tmp
 pkg_build.sh
 /.idea
+/backup_paths.json

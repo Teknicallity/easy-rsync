@@ -20,8 +20,8 @@ class BackupHelper {
     public static function buildRsyncOptions($doDryRun = false) {
         // Ensure the configuration is loaded
         self::loadConfig();
-        
-        $options = "rsync";
+
+        $options = "";
         
         if (self::$config['rsyncRecursive']) {
             $options .= ' --recursive';
