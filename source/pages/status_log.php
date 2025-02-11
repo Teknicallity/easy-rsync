@@ -18,10 +18,6 @@ use unraid\plugins\EasyRsync\ERSettings;
     .backupNotRunning {
         color: red;
     }
-
-    .backupUnknown {
-        color: darkorchid;
-    }
 </style>
 
 <h3>The backup is <span id="backupStatusTextStatus" class="backupStatusText"></span>.</h3>
@@ -61,20 +57,18 @@ use unraid\plugins\EasyRsync\ERSettings;
 
             function updateStatus(statusClass, txt) {
                 backupStatusTextElements.forEach(element => {
-                    element.classList.remove('backupRunning', 'backupNotRunning', 'backupUnknown');
+                    element.classList.remove('backupRunning', 'backupNotRunning');
                     element.classList.add(statusClass);
                     element.textContent = txt;
                 });
                 
-                abortBtnElements.forEach(button => button.disabled = (statusClass === 'backupNotRunning' || statusClass === 'backupUnknown'));
+                abortBtnElements.forEach(button => button.disabled = (statusClass === 'backupNotRunning'));
             }
 
-            if (data.status === 'running') {
+            if (data.running) {
                 updateStatus('backupRunning', 'Running');
-            } else if (data.status === 'stopped') {
-                updateStatus('backupNotRunning', 'Stopped');
             } else {
-                updateStatus('backupUnknown', 'Unknown');
+                updateStatus('backupNotRunning', 'Stopped');
             }
 
         }).fail(function (jqXHR, textStatus, errorThrown) {

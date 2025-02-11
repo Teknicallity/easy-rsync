@@ -41,10 +41,10 @@ function handleGetAction(string $action): void {
     switch ($action) {
         case 'getBackupStatus':
             try {
-                $status = LogHandler::getBackupStatus();
+                $running = LogHandler::getBackupStatus();
                 
                 $data = [
-                    'status' => $status,
+                    'running' => $running,
                 ];
                 sendResponse($data);
             } catch (Exception $e) {
@@ -54,11 +54,11 @@ function handleGetAction(string $action): void {
         case 'getPluginLog':
             try {
                 $log = LogHandler::getPluginLog();
-                $status = LogHandler::getBackupStatus();
+                $running = LogHandler::getBackupStatus();
                 
                 $data = [
                     'log' => $log,
-                    'status' => $status,
+                    'running' => $running,
                 ];
                 sendResponse($data);
             } catch (Exception $e) {
@@ -68,11 +68,11 @@ function handleGetAction(string $action): void {
         case 'getRsyncLog':
             try {
                 $log = LogHandler::getRsyncLog();
-                $status = LogHandler::getBackupStatus();
+                $running = LogHandler::getBackupStatus();
                 
                 $data = [
                     'log' => $log,
-                    'status' => $status,
+                    'running' => $running,
                 ];
                 sendResponse($data);
             } catch (Exception $e) {
