@@ -15,7 +15,7 @@ class ERSettings {
     public static $stateRsyncAbortedFile = 'aborted';
     public static $emhttpVars = '/var/local/emhttp/var.ini';
 
-    public static function getConfigFilePath() {
+    public static function getPathsJsonFilePath() {
         return self::$configDir . '/' . self::$pathsFile;
     }
     
@@ -36,11 +36,11 @@ class ERSettings {
     }
 
     private static function savePaths(array $paths) {
-        file_put_contents(self::getConfigFilePath(), json_encode($paths, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        file_put_contents(self::getPathsJsonFilePath(), json_encode($paths, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 
     public static function getPaths() {
-        $filePath = self::getConfigFilePath();
+        $filePath = self::getPathsJsonFilePath();
         
         if (file_exists($filePath)) {
             $paths = json_decode(file_get_contents($filePath), true);

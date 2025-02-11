@@ -1,9 +1,9 @@
 <?php
-
 namespace unraid\plugins\EasyRsync;
 
 require_once __DIR__ ."/ERSettings.php";
 require_once __DIR__ ."/ERHelper.php";
+
 use unraid\plugins\EasyRsync\ERSettings;
 use unraid\plugins\EasyRsync\ERHelper;
 use Exception;

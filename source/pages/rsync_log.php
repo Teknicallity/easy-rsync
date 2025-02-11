@@ -19,7 +19,7 @@ use unraid\plugins\EasyRsync\ERSettings;
     const urlRsync = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";
 
     document.addEventListener("DOMContentLoaded", function () {
-        setInterval(checkBackup, 5000);
+        setInterval(checkBackupRsync, 5000);
 
         // Still loaded from status_log
         // const abortBtn = document.getElementById('abortBtn');
@@ -31,36 +31,36 @@ use unraid\plugins\EasyRsync\ERSettings;
         //     })
         // });
 
-        const rsyngLogDiv = document.getElementById('rsyngLogFrame');
-        // const backupStatusText = document.getElementById('backupStatusText');
-
-        function checkBackup() {
-
-            $.get(`${urlRsync}?action=getRsyncLog`, function (data) {
-                console.log(data);
-
-                if (data.log === "") {
-                    rsyngLogDiv.innerHTML = "<p>The log does not exist or is empty</p>";
-                } else {
-                    rsyngLogDiv.innerHTML = data.log;
-                }
-
-                // Still loaded from status_log
-                // if (data.status === 'running') {
-                //     backupStatusText.className = 'backupRunning';
-                //     backupStatusText.textContent = 'Running';
-                //     abortBtn.disabled = false;
-                // } else if (data.status === 'stopped') {
-                //     backupStatusText.className = 'backupNotRunning';
-                //     backupStatusText.textContent = 'Not Running';
-                //     abortBtn.disabled = true;
-                // }
-
-            }).fail(function (jqXHR, textStatus, errorThrown) {
-                console.error('Request failed:', jqXHR.status, textStatus, errorThrown);
-                rsyngLogDiv.textContent = 'Something went wrong while talking to the server.'
-            })
-        }
+        checkBackupRsync();
     });
+
+    function checkBackupRsync() {
+        const rsyngLogDiv = document.getElementById('rsyngLogFrame');
+
+        $.get(`${urlRsync}?action=getRsyncLog`, function (data) {
+            console.log(data);
+
+            if (data.log === "") {
+                rsyngLogDiv.innerHTML = "<p>The log does not exist or is empty</p>";
+            } else {
+                rsyngLogDiv.innerHTML = data.log;
+            }
+
+            // Still loaded from status_log
+            // if (data.status === 'running') {
+            //     backupStatusText.className = 'backupRunning';
+            //     backupStatusText.textContent = 'Running';
+            //     abortBtn.disabled = false;
+            // } else if (data.status === 'stopped') {
+            //     backupStatusText.className = 'backupNotRunning';
+            //     backupStatusText.textContent = 'Not Running';
+            //     abortBtn.disabled = true;
+            // }
+
+        }).fail(function (jqXHR, textStatus, errorThrown) {
+            console.error('Request failed:', jqXHR.status, textStatus, errorThrown);
+            rsyngLogDiv.textContent = 'Something went wrong while talking to the server.'
+        })
+    }
 
 </script>

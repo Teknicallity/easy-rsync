@@ -28,7 +28,7 @@ use unraid\plugins\EasyRsync\ERSettings;
     const urlStatus = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";
 
     document.addEventListener("DOMContentLoaded", function () {
-        setInterval(checkBackup, 5000);
+        setInterval(checkBackupStatus, 5000);
 
         $('.abortBtn').on('click', function () {
             $.post(urlStatus, {
@@ -38,10 +38,10 @@ use unraid\plugins\EasyRsync\ERSettings;
             })
         });
 
-        checkBackup();
+        checkBackupStatus();
     });
 
-    function checkBackup() {
+    function checkBackupStatus() {
         const backupStatusTextElements = document.querySelectorAll('.backupStatusText');
         const statusLogDiv = document.getElementById('statusLogFrame');
         const abortBtnElements = document.querySelectorAll('.abortBtn');

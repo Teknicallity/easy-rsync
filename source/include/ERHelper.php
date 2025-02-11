@@ -1,6 +1,7 @@
 <?php
-
 namespace unraid\plugins\EasyRsync;
+
+require_once __DIR__ ."/ERSettings.php";
 
 use unraid\plugins\EasyRsync\ERSettings;
 
@@ -30,5 +31,9 @@ class ERHelper {
             return true;
         }
         return false;
+    }
+
+    public static function isAbortRequested() {
+        return file_exists(ERSettings::getStateRsyncAbortedFilePath());
     }
 }

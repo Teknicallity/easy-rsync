@@ -28,7 +28,7 @@ function handlePostAction(string $action): void {
             sendResponse(['msg' => 'Abort Success']);
             break;
         case 'manualBackup':
-            // exec('php ' . dirname(__DIR__) . '/scripts/rsync_backup.php > /dev/null &');
+            exec('php ' . dirname(__DIR__) . '/scripts/rsync_backup.php > /dev/null &');
             exec('logger test-successful');
             sendResponse(['msg' => 'Starting sync']);
             break;

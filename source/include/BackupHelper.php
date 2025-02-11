@@ -1,13 +1,26 @@
 <?php
+namespace unraid\plugins\EasyRsync;
+
+require_once __DIR__ ."/ERSettings.php";
+require_once "/usr/local/emhttp/plugins/dynamix/include/Wrappers.php";
 
 use unraid\plugins\EasyRsync\ERSettings;
 
 class BackupHelper {
-    private static $config = parse_plugin_cfg(ERSettings::$appName);
+    private static $config = null; // Initialize as null
+
+    protected static function loadConfig() {
+        if (self::$config === null) {
+            self::$config = parse_plugin_cfg(ERSettings::$appName);
+        }
+    }
 
     //TODO: advanced mode override. direct rsync options injector
 
     public static function buildRsyncOptions($doDryRun = false) {
+        // Ensure the configuration is loaded
+        self::loadConfig();
+        
         $options = "rsync";
         
         if (self::$config['rsyncRecursive']) {

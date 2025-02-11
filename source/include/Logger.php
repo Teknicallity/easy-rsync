@@ -1,4 +1,7 @@
 <?php
+namespace unraid\plugins\EasyRsync;
+
+require_once __DIR__ ."/LogHandler.php";
 
 use unraid\plugins\EasyRsync\LogHandler;
 
