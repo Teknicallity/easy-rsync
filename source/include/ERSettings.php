@@ -2,6 +2,8 @@
 
 namespace unraid\plugins\EasyRsync;
 
+require_once "/usr/local/emhttp/plugins/dynamix/include/Wrappers.php";
+
 class ERSettings {
 
     public static $appName = 'easy.rsync';
@@ -14,6 +16,10 @@ class ERSettings {
     public static $stateRsyncRunningFile = 'running';
     public static $stateRsyncAbortedFile = 'aborted';
     public static $emhttpVars = '/var/local/emhttp/var.ini';
+
+    public static function getUserConfig() {
+        return parse_plugin_cfg(self::$appName);
+    }
 
     public static function getPathsJsonFilePath() {
         return self::$configDir . '/' . self::$pathsFile;

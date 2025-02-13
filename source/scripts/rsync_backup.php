@@ -13,11 +13,22 @@ use unraid\plugins\EasyRsync\Logger;
 use unraid\plugins\EasyRsync\LogLevel;
 use unraid\plugins\EasyRsync\NotificationService;
 
-$logger = new Logger(LogLevel::DEBUG);
-$logger->logDebug("test");
-$logger->logInfo("test");
-$logger->logWarning("test");
-$logger->logError("test");
+$userConfig = ERSettings::getUserConfig();
+
+$logger = new Logger(loglevelString: $userConfig["logLevel"]);
+
+$shortopts = "";
+$shortopts .= "n";
+
+$longopts = array(
+    "dry-run",
+);
+
+$options = getopt($shortopts, $longopts);
+
+$dryRunMode = isset($options['n']) || isset($options['dry-run']);
+
+
 $backupStartedTime = new DateTime();
 $logger->logDebug('Backup script called'. $backupStartedTime->format('c'));
 
@@ -82,7 +93,7 @@ if (empty($destinations)) {
 
 //Summary map for storing final log/notifier messages for each source and or destination
 
-$rsyncOptions = BackupHelper::buildRsyncOptions(doDryRun: true);
+$rsyncOptions = BackupHelper::buildRsyncOptions(doDryRun: $dryRunMode);
 $logger->logDebug($rsyncOptions);
 //Test all sources and destinations
 

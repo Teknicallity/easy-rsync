@@ -36,6 +36,7 @@ try {
 
 <div>
     <button id="manualBackupButton">Manual BackupJQuery</button>
+    <button id="manualDryBackupButton">Manual Dry Backup</button>
     <button id="getBackupStatus">Get StatusJQuery</button>
     <div id="backupStatusDisplay"></div>
 </div>
@@ -47,6 +48,14 @@ try {
         $('#manualBackupButton').on('click', function() {
             $.post(urlSettings, {
                 action: 'manualBackup',
+            }, function(response) {
+                console.log('Success:', response);
+            });
+        });
+
+        $('#manualDryBackupButton').on('click', function() {
+            $.post(urlSettings, {
+                action: 'manualDryBackup',
             }, function(response) {
                 console.log('Success:', response);
             });

@@ -11,7 +11,7 @@ class BackupHelper {
 
     protected static function loadConfig() {
         if (self::$config === null) {
-            self::$config = parse_plugin_cfg(ERSettings::$appName);
+            self::$config = ERSettings::getUserConfig();
         }
     }
 

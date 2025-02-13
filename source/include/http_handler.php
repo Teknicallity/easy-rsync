@@ -29,7 +29,12 @@ function handlePostAction(string $action): void {
             break;
         case 'manualBackup':
             exec('php ' . dirname(__DIR__) . '/scripts/rsync_backup.php > /dev/null &');
-            exec('logger test-successful');
+            exec('logger -t EasyRsync Started backup');
+            sendResponse(['msg' => 'Starting sync']);
+            break;
+        case 'manualDryBackup':
+            exec('php ' . dirname(__DIR__) . '/scripts/rsync_backup.php --dry-run > /dev/null &');
+            exec('logger -t EasyRsync Started dry backup');
             sendResponse(['msg' => 'Starting sync']);
             break;
         default:
