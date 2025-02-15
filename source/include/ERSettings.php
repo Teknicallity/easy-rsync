@@ -21,6 +21,30 @@ class ERSettings {
         return parse_plugin_cfg(self::$appName);
     }
 
+    public static function saveUserConfig(array $userConfig) {
+        $ini_contents = self::arrayToIni($userConfig);
+        $configFilePath = self::$configDir .'easy.rsync.cfg';
+        file_put_contents($configFilePath, $ini_contents);
+    }
+
+    private static function arrayToIni(array $array): string {
+        $iniContents = '';
+        
+        foreach ($array as $key => $value) {
+            echo "key: '$key' ". gettype($value) ." value: $value\n";
+            
+            $iniContents .= match (gettype($value)) {
+                'boolean' => "$key=" . ($value ? 'true' : 'false') . "\n",
+                'integer' => "$key=$value\n",
+                'string'  => "$key=\"$value\"\n",
+                'array'   => "\n[$key]\n" . arrayToIni($value),
+                default   => "",
+            };
+        }
+        
+        return $iniContents;
+    }
+
     public static function getPathsJsonFilePath() {
         return self::$configDir . '/' . self::$pathsFile;
     }
