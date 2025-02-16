@@ -1,16 +1,16 @@
 <?xml version="1.0" standalone="yes"?>
 <!DOCTYPE PLUGIN [
-  <!ENTITY repoName   "easy-rsync">
-  <!ENTITY pluginName "easy.rsync">
-  <!ENTITY gitUser    "Teknicallity">
-  <!ENTITY version    "2025.02.13-a10">
-  <!ENTITY gitBranch  "dev">
-  <!ENTITY gitURL     "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
-  <!ENTITY pluginURL  "https://raw.githubusercontent.com/&gitUser;/&repoName;/&gitBranch;/&pluginName;.plg">
-  <!ENTITY launch     "Settings/EasyRsync">
-  <!ENTITY plugin     "/boot/config/plugins/&pluginName;">
-  <!ENTITY emhttp     "/usr/local/emhttp/plugins/&pluginName;">
-  <!ENTITY md5        "89481931cad3944cf25ea452f439ca46">
+  <!ENTITY repoName     "easy-rsync">
+  <!ENTITY pluginName   "easy.rsync">
+  <!ENTITY gitUser      "Teknicallity">
+  <!ENTITY version      "2025.02.16">
+  <!ENTITY gitBranch    "main">
+  <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
+  <!ENTITY pluginURL    "https://raw.githubusercontent.com/&gitUser;/&repoName;/&gitBranch;/&pluginName;.plg">
+  <!ENTITY launch       "Settings/EasyRsync">
+  <!ENTITY plugin       "/boot/config/plugins/&pluginName;">
+  <!ENTITY emhttp       "/usr/local/emhttp/plugins/&pluginName;">
+  <!ENTITY md5          "fa8fbf3ed9cfa8a0b688e75d9991f32e">
 ]>
 <PLUGIN name="&pluginName;" 
         author="Teknicallity" 
@@ -22,6 +22,9 @@
 
 <CHANGES>
 ## &pluginName;
+
+### 2025.02.16
+- Logs display in separate tabs
 
 ### 2025.02.02
 - Initial commit
@@ -43,7 +46,7 @@ echo "remove old tarballs. Version: &version;"
 
 <!--The install script.-->
 <FILE Name="/boot/config/plugins/&pluginName;/&pluginName;-&version;.txz" Run="upgradepkg --install-new">
-<URL>&gitURL;/archive/&pluginName;-&version;.txz</URL>
+<URL>&repoLocation;/archive/&pluginName;-&version;.txz</URL>
 <MD5>&md5;</MD5>
 </FILE>
 
