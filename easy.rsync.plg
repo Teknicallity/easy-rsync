@@ -3,14 +3,14 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2025.02.16">
-  <!ENTITY gitBranch    "main">
+  <!ENTITY version      "2025.02.16-a11">
+  <!ENTITY gitBranch    "dev">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY pluginURL    "https://raw.githubusercontent.com/&gitUser;/&repoName;/&gitBranch;/&pluginName;.plg">
   <!ENTITY launch       "Settings/EasyRsync">
   <!ENTITY plugin       "/boot/config/plugins/&pluginName;">
   <!ENTITY emhttp       "/usr/local/emhttp/plugins/&pluginName;">
-  <!ENTITY md5          "fa8fbf3ed9cfa8a0b688e75d9991f32e">
+  <!ENTITY md5          "63b174b915dc3bfbc204b45c9344ddc8">
 ]>
 <PLUGIN name="&pluginName;" 
         author="Teknicallity" 

@@ -29,7 +29,7 @@ if ($_POST) {
             <div style="display: table; width: 300px;">
                 <textarea id="sourceDirectories" name="sourceDirectories"
                     onfocus="$(this).next('.ft').slideDown('fast');" style="resize: vertical; width: 400px;">
-                    <?= implode("\r\n", $ERSettings->getPaths()["sources"]) ?>
+                    <?= implode("\r\n", ERSettings::getPaths()["sources"]) ?>
                 </textarea>
                 <div class="ft" style="display: none;">
                     <div class="fileTreeDiv"></div>
@@ -48,7 +48,7 @@ if ($_POST) {
             <div style="display: table; width: 300px;">
                 <textarea id="destinationHosts" name="destinationHosts"
                     onfocus="$(this).next('.ft').slideDown('fast');" style="resize: vertical; width: 400px;">
-                    <?= implode("\r\n", $ERSettings->getPaths()["destinations"]) ?>
+                    <?= implode("\r\n", ERSettings::getPaths()["destinations"]) ?>
                 </textarea>
                 <!-- <div class="ft" style="display: none;">
                     <button onclick="">Add to hosts</button>

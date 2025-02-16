@@ -21,7 +21,7 @@ usage() {
   echo "  -p    Specify the .plg file to use. This will replace the md5 hash"
   echo "  -d    Dry Run: don not write any changes to files"
   echo "  -y    Accept mode: skip confirmation"
-  echo "  -l    Modify plg to point to local tar archive"
+  # echo "  -l    Modify plg to point to local tar archive" # Not working 2025.02.16
   echo "  -h    Display this help message"
   echo
   echo "Example:"
@@ -89,7 +89,7 @@ trap "rm -rf $tmpdir" EXIT
 # Generate the version string
 version_date=$(date +"%Y.%m.%d")
 if [[ -n "$version_suffix" ]]; then
-  version=$version_date$version_suffix
+  version=$version_date-$version_suffix
 else
   version=$version_date
 fi
@@ -138,23 +138,21 @@ if [[ -n "$plg_filepath" && "$dry_run" == false ]]; then
 
     sed -i "s|<!ENTITY repoName     \".*\">|<!ENTITY repoName     \"$repo_name\">|" "$plg_filepath"
     sed -i "s|<!ENTITY pluginName   \".*\">|<!ENTITY pluginName   \"$plugin_name\">|" "$plg_filepath"
+    sed -i "s|<!ENTITY version      \".*\">|<!ENTITY version      \"$version\">|" "$plg_filepath"
 
-    # if [[ -n "$version_suffix" ]]; then # if version suffix, set dev features
-    #   sed -i "s|<!ENTITY version      \".*\">|<!ENTITY version      \"$version_date-$version_suffix\">|" "$plg_filepath"
-    #   sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"dev\">|" "$plg_filepath"
-    # else # set main features
-    # fi
+    if [[ -n "$version_suffix" ]]; then # if version suffix, set dev features
+      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"dev\">|" "$plg_filepath"
+    else # set main features
+      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"main\">|" "$plg_filepath"
+    fi
     
 
-    sed -i "s|<!ENTITY version      \".*\">|<!ENTITY version      \"$version\">|" "$plg_filepath"
-    sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"main\">|" "$plg_filepath"
-
-    if [[ "$local_mode" == "true" ]]; then # if local mode is on
-      sed -i "s|<!ENTITY repoLocation \".*\">|<!ENTITY repoLocation \"$plugin_dir\">|" "$plg_filepath"
-    else
-      github_repo="https://github.com/\&gitUser;/\&repoName;/raw/\&gitBranch;"
-      sed -i "s|<!ENTITY repoLocation \".*\">|<!ENTITY repoLocation \"$github_repo\">|" "$plg_filepath"
-    fi
+    # if [[ "$local_mode" == "true" ]]; then # if local mode is on
+    #   sed -i "s|<!ENTITY repoLocation \".*\">|<!ENTITY repoLocation \"$plugin_dir\">|" "$plg_filepath"
+    # else
+    #   github_repo="https://github.com/\&gitUser;/\&repoName;/raw/\&gitBranch;"
+    #   sed -i "s|<!ENTITY repoLocation \".*\">|<!ENTITY repoLocation \"$github_repo\">|" "$plg_filepath"
+    # fi
   fi
 fi
 
