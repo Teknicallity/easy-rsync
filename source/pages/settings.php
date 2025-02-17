@@ -19,18 +19,18 @@ if ($_POST) {
 }
 
 ?>
+<link type="text/css" rel="stylesheet" href="<?php autov('/webGui/styles/jquery.filetree.css') ?>">
+<script src="<?php autov('/webGui/javascript/jquery.filetree.js') ?>" charset="utf-8"></script>
 
-<div class="title">Settings</div>
 
 <form id="erSettingsForm" method="post">
+    <div class="title">Settings</div>
     <dl>
         <dt>Local directories</dt>
         <dd>
             <div style="display: table; width: 300px;">
-                <textarea id="sourceDirectories" name="sourceDirectories"
-                    onfocus="$(this).next('.ft').slideDown('fast');" style="resize: vertical; width: 400px;">
-                    <?= implode("\r\n", ERSettings::getPaths()["sources"]) ?>
-                </textarea>
+                <textarea id="sourceDirectories" name="sourceDirectories" onfocus="$(this).next('.ft').slideDown('fast');" 
+                style="resize: vertical; width: 400px;"><?= implode("\r\n", ERSettings::getPaths()["sources"]) ?></textarea>
                 <div class="ft" style="display: none;">
                     <div class="fileTreeDiv"></div>
                     <button onclick="addSelectionToList(this);  return false;">Add to sources</button>
@@ -46,10 +46,8 @@ if ($_POST) {
         <dt>Local directories</dt>
         <dd>
             <div style="display: table; width: 300px;">
-                <textarea id="destinationHosts" name="destinationHosts"
-                    onfocus="$(this).next('.ft').slideDown('fast');" style="resize: vertical; width: 400px;">
-                    <?= implode("\r\n", ERSettings::getPaths()["destinations"]) ?>
-                </textarea>
+                <textarea id="destinationHosts" name="destinationHosts" onfocus="$(this).next('.ft').slideDown('fast');" 
+                    style="resize: vertical; width: 400px;"><?= implode("\r\n", ERSettings::getPaths()["destinations"]) ?></textarea>
                 <!-- <div class="ft" style="display: none;">
                     <button onclick="">Add to hosts</button>
                 </div> -->
@@ -72,6 +70,9 @@ if ($_POST) {
 <script>
     const urlSettings = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";
     $(function() {
+        $('.fileTreeDiv').fileTree({
+            multiSelect: true,
+        });
 
         $('#manualBackupButton').on('click', function() {
             $.post(urlSettings, {
