@@ -86,6 +86,9 @@ class ERSettings {
     }
 
     public static function saveSourcesAndDestinations(array $sources = null, array $destinations = null) {
+        if ($sources == null && $destinations == null) {
+            return;
+        }
         $paths = self::getPaths();
         
         $paths['sources'] = $sources ?? $paths['sources'];
