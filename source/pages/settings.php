@@ -1,12 +1,18 @@
 <?php
+
 require_once dirname(__DIR__) ."/include/ERSettings.php";
+require_once dirname(__DIR__) ."/include/Logger.php";
 require_once "/usr/local/emhttp/plugins/dynamix/include/Helpers.php"; //mk_option
 
 use unraid\plugins\EasyRsync\ERSettings;
+use unraid\plugins\EasyRsync\LogLevel;
+use unraid\plugins\EasyRsync\Logger;
 /*
 Take list of directories to backup
 take remote backup host and path
 */
+
+$logger = new Logger(LogLevel::DEBUG);
 
 try {
     $appName = ERSettings::$appName;
@@ -20,26 +26,41 @@ if ($_POST) {
         mkdir(ERSettings::$configDir);
     }
     $results = print_r($_POST, true);
-    file_put_contents(ERSettings::$configDir ."form_output.txt", $results);
+    file_put_contents(ERSettings::$configDir ."/form_output.txt", $results);
 
     // save user config
-    $currentConfig = self::getUserConfig();
+    $currentConfig = ERSettings::getUserConfig();
     foreach ($currentConfig as $key => $value){
         if(isset($_POST[$key])){
-            $currentConfig = $_POST[$key];
+            $currentConfig[$key] = $_POST[$key];
+            $logger->logDebug("Key: $key, Old: $value, New: ". $_POST[$key]);
         }
     }
+    try {
+        $output = ERSettings::saveUserConfig($currentConfig);
+    } catch (Exception $e) {
+        $logger->logError("Could not save user config". $e->getMessage());
+    }
+    $logger->logInfo("Saved user config");
 
     $sources = null;
     $destinations = null;
     // save filepaths and hosts
     if(isset($_POST["sourceDirectories"])){
-        $sources = $_POST["sourceDirectories"];
+        $sources = explode("\n", $_POST["sourceDirectories"]);
     }
     if(isset($_POST["destinationHosts"])){
-        $destinations = $_POST["destinationHosts"];
+        $destinations = explode("\n", $_POST["destinationHosts"]);
     }
-    ERSettings::saveSourcesAndDestinations($sources, $destinations);
+    $logger->logDebug("Got path results");
+    $logger->logDebug(print_r($sources, true));
+    $logger->logDebug(print_r($destinations, true));
+    try {
+        ERSettings::saveSourcesAndDestinations($sources, $destinations);
+    } catch (Exception $e) {
+        $logger->logError("Could not save paths". $e->getMessage());
+    }
+    $logger->logInfo("Saved backup paths result");
 }
 
 $userConfig = ERSettings::getUserConfig();
@@ -76,8 +97,8 @@ $paths = ERSettings::getPaths();
         <dt>Capture file datetimes</dt>
         <dd>
             <select id="rsyncTimes" name="rsyncTimes">
-                <?= mk_option($userConfig["rsyncTimes"], 0, "No") ?>
-                <?= mk_option($userConfig["rsyncTimes"], 1, "Yes") ?>
+                <?= mk_option($userConfig["rsyncTimes"], "false", "No") ?>
+                <?= mk_option($userConfig["rsyncTimes"], "true", "Yes") ?>
             </select>
         </dd>
     </dl>
@@ -108,8 +129,8 @@ $paths = ERSettings::getPaths();
         <dt>Compress backup</dt>
         <dd>
             <select id="rsyncCompress" name="rsyncCompress">
-                <?= mk_option($userConfig["rsyncCompress"], 0, "No") ?>
-                <?= mk_option($userConfig["rsyncCompress"], 1, "Yes") ?>
+                <?= mk_option($userConfig["rsyncCompress"], "false", "No") ?>
+                <?= mk_option($userConfig["rsyncCompress"], "true", "Yes") ?>
             </select>
         </dd>
     </dl>
@@ -122,7 +143,7 @@ $paths = ERSettings::getPaths();
         <dd>
             <div style="display: table; width: 300px;">
                 <textarea id="sourceDirectories" name="sourceDirectories" onfocus="$(this).next('.ft').slideDown('fast');" 
-                style="resize: vertical; width: 400px;"><?= implode("\r\n", $paths["sources"]) ."\r\n" ?></textarea>
+                style="resize: vertical; width: 400px;"><?= implode("\r\n", $paths["sources"]) ?></textarea>
                 <div class="ft" style="display: none;">
                     <div class="fileTreeDiv"></div>
                     <button onclick="addSelectionToList(this);  return false;">Add to sources</button>

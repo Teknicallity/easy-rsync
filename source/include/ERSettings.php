@@ -23,18 +23,18 @@ class ERSettings {
 
     public static function saveUserConfig(array $userConfig) {
         $ini_contents = self::arrayToIni($userConfig);
-        $configFilePath = self::$configDir .'easy.rsync.cfg';
-        file_put_contents($configFilePath, $ini_contents);
+        $configFilePath = self::$configDir .'/easy.rsync.cfg';
+        return file_put_contents($configFilePath, $ini_contents);
     }
 
     private static function arrayToIni(array $array): string {
         $iniContents = '';
         
         foreach ($array as $key => $value) {
-            echo "key: '$key' ". gettype($value) ." value: $value\n";
+            // echo "key: '$key' ". gettype($value) ." value: $value\n";
             
             $iniContents .= match (gettype($value)) {
-                'boolean' => "$key=" . ($value ? 'true' : 'false') . "\n",
+                'boolean' => "$key=\"" . ($value ? 'true' : 'false') . "\"\n",
                 'integer' => "$key=$value\n",
                 'string'  => "$key=\"$value\"\n",
                 'array'   => "\n[$key]\n" . arrayToIni($value),
@@ -66,7 +66,7 @@ class ERSettings {
     }
 
     private static function savePaths(array $paths) {
-        file_put_contents(self::getPathsJsonFilePath(), json_encode($paths, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return file_put_contents(self::getPathsJsonFilePath(), json_encode($paths, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 
     public static function getPaths() {
@@ -86,14 +86,22 @@ class ERSettings {
     }
 
     public static function saveSourcesAndDestinations(array $sources = null, array $destinations = null) {
-        if ($sources == null && $destinations == null) {
+        if (empty($sources) && empty($destinations)) {
             return;
         }
+    
         $paths = self::getPaths();
-        
-        $paths['sources'] = $sources ?? $paths['sources'];
-        $paths['destinations'] = $destinations ?? $paths['destinations'];
-
+    
+        if (!empty($sources)) {
+            $trimmedSources = array_map('trim', $sources);
+            $paths['sources'] = array_filter($trimmedSources, 'strlen');
+        }
+    
+        if (!empty($destinations)) {
+            $trimmedDestinations = array_map('trim', $destinations);
+            $paths['destinations'] = array_filter($trimmedDestinations, 'strlen');
+        }
+    
         self::savePaths($paths);
     }
 }

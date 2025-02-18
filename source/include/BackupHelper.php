@@ -23,16 +23,16 @@ class BackupHelper {
 
         $options = "";
         
-        if (self::$config['rsyncRecursive']) {
+        if (self::$config['rsyncRecursive'] == "true") {
             $options .= ' --recursive';
         }
-        if (self::$config['rsyncTimes']) {
+        if (self::$config['rsyncTimes'] == "true") {
             $options .= ' --times';
         }
-        if (self::$config['rsyncVerbose']) {
+        if (self::$config['rsyncVerbose'] == "true") {
             $options .= ' --verbose';
         }
-        if (self::$config['rsyncHumanReadable']) {
+        if (self::$config['rsyncHumanReadable'] == "true") {
             $options .= ' --human-readable';
         }
         if (self::$config['rsyncDelete'] === "after") {
@@ -47,7 +47,7 @@ class BackupHelper {
         // if (self::$config['rsyncRemoteShell']) {
         //     $options .= ' -e "' . escapeshellarg(self::$config['rsyncRemoteShell']) . '"';
         // }
-        if (self::$config['rsyncCompress']) {
+        if (self::$config['rsyncCompress'] == "true") {
             $options .= ' --compress';
         }
         if ($doDryRun) {
