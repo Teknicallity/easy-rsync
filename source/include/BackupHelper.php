@@ -16,6 +16,22 @@ class BackupHelper {
     }
 
     //TODO: advanced mode override. direct rsync options injector
+    /*TODO
+     * regular:
+     *  --perms
+     *  --owner
+     *  --group
+     *  --bwlimit=KBps
+     * 
+     * advanced:
+     *  --acls
+     *  --xattrs
+     * 
+     * other:
+     *  --include
+     *  --exclude
+     *
+     */
 
     public static function buildRsyncOptions($doDryRun = false) {
         // Ensure the configuration is loaded
