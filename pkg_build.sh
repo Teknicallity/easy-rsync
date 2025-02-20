@@ -7,7 +7,7 @@ plg_filepath=$(find "$plugin_dir" -name "*.plg" -exec realpath {} \;)
 repo_name=$(printf '%q\n' "${plugin_dir##*/}") # takes the name from root directory
 plugin_name="${repo_name//-/\.}" # replaces dashes with dots
 accept_flag=false
-local_mode=false
+unraidHost=""
 dry_run=false
 
 # Function to display usage/help
@@ -21,7 +21,7 @@ usage() {
   echo "  -p    Specify the .plg file to use. This will replace the md5 hash"
   echo "  -d    Dry Run: don not write any changes to files"
   echo "  -y    Accept mode: skip confirmation"
-  # echo "  -l    Modify plg to point to local tar archive" # Not working 2025.02.16
+  echo "  -u    Unraid host to send the archive to"
   echo "  -h    Display this help message"
   echo
   echo "Example:"
@@ -29,7 +29,7 @@ usage() {
 }
 
 # Parse command-line options
-while getopts ":v:p:dylh" opt; do
+while getopts ":v:p:u:dylh" opt; do
   case ${opt} in
     v)
       version_suffix="$OPTARG"
@@ -37,14 +37,14 @@ while getopts ":v:p:dylh" opt; do
     p)
       plg_filepath=$(realpath "$OPTARG")
       ;;
+    u)
+      unraidHost="$OPTARG"
+      ;;
     d)
       dry_run=true
       ;;
     y)
       accept_flag=true
-      ;;
-    l)
-      local_mode=true
       ;;
     h)
       usage
@@ -140,19 +140,17 @@ if [[ -n "$plg_filepath" && "$dry_run" == false ]]; then
     sed -i "s|<!ENTITY pluginName   \".*\">|<!ENTITY pluginName   \"$plugin_name\">|" "$plg_filepath"
     sed -i "s|<!ENTITY version      \".*\">|<!ENTITY version      \"$version\">|" "$plg_filepath"
 
-    if [[ -n "$version_suffix" ]]; then # if version suffix, set dev features
-      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"dev\">|" "$plg_filepath"
-    else # set main features
-      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"main\">|" "$plg_filepath"
-    fi
-    
 
-    # if [[ "$local_mode" == "true" ]]; then # if local mode is on
-    #   sed -i "s|<!ENTITY repoLocation \".*\">|<!ENTITY repoLocation \"$plugin_dir\">|" "$plg_filepath"
-    # else
-    #   github_repo="https://github.com/\&gitUser;/\&repoName;/raw/\&gitBranch;"
-    #   sed -i "s|<!ENTITY repoLocation \".*\">|<!ENTITY repoLocation \"$github_repo\">|" "$plg_filepath"
-    # fi
+    if [[ -z "$unraidHost" ]]; then #unraid host not set, package is in github main
+      sed -i "s|^<!-- <URL>\&repoLocation;/archive/\&pluginName;-\&version;\.txz</URL> -->|<URL>\&repoLocation;/archive/\&pluginName;-\&version;\.txz</URL>|" "$plg_filepath"
+      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"main\">|" "$plg_filepath"
+    else # unraid host set, package should be transferred and use dev branch files
+      sed -i "s|^<URL>\&repoLocation;/archive/\&pluginName;-\&version;\.txz</URL>|<!-- <URL>\&repoLocation;/archive/\&pluginName;-\&version;\.txz</URL> -->|" "$plg_filepath"
+      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"dev\">|" "$plg_filepath"
+
+      rsync "$archive_file" "$unraidHost:/boot/config/plugins/$plugin_name/"
+      rsync "$plg_filepath" "$unraidHost:/boot/"
+    fi
   fi
 fi
 
