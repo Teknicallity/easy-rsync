@@ -13,7 +13,7 @@ enum LogLevel: int {
 }
 
 class Logger {
-    private $logLevel;
+    private LogLevel $logLevel;
 
     public function __construct(LogLevel $logLevel = LogLevel::INFO, String $loglevelString = null) {
         $this->logLevel = $logLevel;
@@ -21,7 +21,6 @@ class Logger {
         if ($loglevelString !== null) {
             $this->logLevel = match (strtolower($loglevelString)) {
                 "debug" => LogLevel::DEBUG,
-                "info "=> LogLevel::INFO,
                 "error" => LogLevel::ERROR,
                 "warning" => LogLevel::WARNING,
                 default => LogLevel::INFO,

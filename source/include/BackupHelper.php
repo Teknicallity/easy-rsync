@@ -7,9 +7,9 @@ require_once "/usr/local/emhttp/plugins/dynamix/include/Wrappers.php";
 use unraid\plugins\EasyRsync\ERSettings;
 
 class BackupHelper {
-    private static $config = null; // Initialize as null
+    private static ?array $config = null; // Initialize as null
 
-    protected static function loadConfig() {
+    protected static function loadConfig(): void {
         if (self::$config === null) {
             self::$config = ERSettings::getUserConfig();
         }
@@ -22,18 +22,16 @@ class BackupHelper {
      *  --owner
      *  --group
      *  --bwlimit=KBps
-     * 
      * advanced:
      *  --acls
      *  --xattrs
-     * 
      * other:
      *  --include
      *  --exclude
      *
      */
 
-    public static function buildRsyncOptions($doDryRun = false) {
+    public static function buildRsyncOptions($doDryRun = false): string {
         // Ensure the configuration is loaded
         self::loadConfig();
 

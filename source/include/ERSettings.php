@@ -6,22 +6,22 @@ require_once "/usr/local/emhttp/plugins/dynamix/include/Wrappers.php";
 
 class ERSettings {
 
-    public static $appName = 'easy.rsync';
-    public static $configDir = '/boot/config/plugins/easy.rsync';
-    public static $pathsFile = 'backup_paths.json';
-    public static $cronFile = 'easy-rsync.cron';
-    public static $tempFolder = '/tmp/easy.rsync';
-    public static $logFile = 'easy-rsync.log';
-    public static $rsyncLogFile = 'rsync.log';
-    public static $stateRsyncRunningFile = 'running';
-    public static $stateRsyncAbortedFile = 'aborted';
-    public static $emhttpVars = '/var/local/emhttp/var.ini';
+    public static string $appName = 'easy.rsync';
+    public static string $configDir = '/boot/config/plugins/easy.rsync';
+    public static string $pathsFile = 'backup_paths.json';
+    public static string $cronFile = 'easy-rsync.cron';
+    public static string $tempFolder = '/tmp/easy.rsync';
+    public static string $logFile = 'easy-rsync.log';
+    public static string $rsyncLogFile = 'rsync.log';
+    public static string $stateRsyncRunningFile = 'running';
+    public static string $stateRsyncAbortedFile = 'aborted';
+    public static string $emhttpVars = '/var/local/emhttp/var.ini';
 
-    public static function getUserConfig() {
+    public static function getUserConfig(): array{
         return parse_plugin_cfg(self::$appName);
     }
 
-    public static function saveUserConfig(array $userConfig) {
+    public static function saveUserConfig(array $userConfig): bool|int {
         $ini_contents = self::arrayToIni($userConfig);
         $configFilePath = self::$configDir .'/easy.rsync.cfg';
         return file_put_contents($configFilePath, $ini_contents);
@@ -37,7 +37,7 @@ class ERSettings {
                 'boolean' => "$key=\"" . ($value ? 'true' : 'false') . "\"\n",
                 'integer' => "$key=$value\n",
                 'string'  => "$key=\"$value\"\n",
-                'array'   => "\n[$key]\n" . arrayToIni($value),
+                'array'   => "\n[$key]\n" . self::arrayToIni($value),
                 default   => "",
             };
         }
@@ -45,31 +45,31 @@ class ERSettings {
         return $iniContents;
     }
 
-    public static function getPathsJsonFilePath() {
+    public static function getPathsJsonFilePath(): string {
         return self::$configDir . '/' . self::$pathsFile;
     }
     
-    public static function getLogFilePath() {
+    public static function getLogFilePath(): string {
         return self::$tempFolder . '/' . self::$logFile;
     }
 
-    public static function getRsyncLogFilePath() {
+    public static function getRsyncLogFilePath(): string {
         return self::$tempFolder . '/' . self::$rsyncLogFile;
     }
 
-    public static function getStateRsyncRunningFilePath() {
+    public static function getStateRsyncRunningFilePath(): string {
         return self::$tempFolder . '/' . self::$stateRsyncRunningFile;
     }
 
-    public static function getStateRsyncAbortedFilePath() {
+    public static function getStateRsyncAbortedFilePath(): string {
         return self::$tempFolder . '/' . self::$stateRsyncAbortedFile;
     }
 
-    private static function savePaths(array $paths) {
+    private static function savePaths(array $paths): bool|int {
         return file_put_contents(self::getPathsJsonFilePath(), json_encode($paths, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 
-    public static function getPaths() {
+    public static function getPaths(): array {
         $filePath = self::getPathsJsonFilePath();
         
         if (file_exists($filePath)) {
@@ -85,7 +85,7 @@ class ERSettings {
         ];
     }
 
-    public static function saveSourcesAndDestinations(array $sources = null, array $destinations = null) {
+    public static function saveSourcesAndDestinations(array $sources = null, array $destinations = null): void {
         if (empty($sources) && empty($destinations)) {
             return;
         }

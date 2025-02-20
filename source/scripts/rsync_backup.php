@@ -17,8 +17,7 @@ $userConfig = ERSettings::getUserConfig();
 
 $logger = new Logger(loglevelString: $userConfig["logLevel"]);
 
-$shortopts = "";
-$shortopts .= "n";
+$shortopts = "n";
 
 $longopts = array(
     "dry-run",
