@@ -55,7 +55,7 @@ class LogHandler {
 
         try {
             // Write the message to the log file
-            fwrite($handle, $message . PHP_EOL);
+            fwrite($handle, date("Y-m-d H:i:s") . $message . PHP_EOL);
         } catch (Exception $e) {
             throw new Exception("Error writing to log file: " . $e->getMessage());
         } finally {
