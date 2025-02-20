@@ -89,7 +89,7 @@ trap "rm -rf $tmpdir" EXIT
 # Generate the version string
 version_date=$(date +"%Y.%m.%d")
 if [[ -n "$version_suffix" ]]; then
-  version=$version_date-$version_suffix
+  version=$version_date$version_suffix
 else
   version=$version_date
 fi
