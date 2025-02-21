@@ -8,13 +8,13 @@ class ERSettings {
 
     public static string $appName = 'easy.rsync';
     public static string $configDir = '/boot/config/plugins/easy.rsync';
-    public static string $pathsFile = 'backup_paths.json';
-    public static string $cronFile = 'easy-rsync.cron';
+    private static string $pathsFile = 'backup_paths.json';
+    private static string $cronFile = 'easy.rsync.cron';
     public static string $tempFolder = '/tmp/easy.rsync';
-    public static string $logFile = 'easy-rsync.log';
-    public static string $rsyncLogFile = 'rsync.log';
-    public static string $stateRsyncRunningFile = 'running';
-    public static string $stateRsyncAbortedFile = 'aborted';
+    private static string $logFile = 'easy-rsync.log';
+    private static string $rsyncLogFile = 'rsync.log';
+    private static string $stateRsyncRunningFile = 'running';
+    private static string $stateRsyncAbortedFile = 'aborted';
     public static string $emhttpVars = '/var/local/emhttp/var.ini';
 
     public static function getUserConfig(): array{
@@ -103,5 +103,29 @@ class ERSettings {
         }
     
         self::savePaths($paths);
+    }
+
+    public static function updateCron(): array {
+        $cronContents = "# Easy Rsync cron settings" . PHP_EOL;
+        $userConfig = ERSettings::getUserConfig();
+        $cronContents .= match ($userConfig["backupFrequency"]) {
+            "custom" => $userConfig["frequencyCustom"],
+            "daily" => $userConfig["frequencyMinute"] ." ". $userConfig["frequencyHour"] ." * * *",
+            "weekly" => $userConfig["frequencyMinute"] ." ". $userConfig["frequencyHour"] ." * * ".  $userConfig["frequencyWeekday"],
+            "monthly" => $userConfig["frequencyMinute"] ." ". $userConfig["frequencyHour"] . " " .  $userConfig["frequencyDayOfMonth"] ." * *",
+            default => $cronContents = ''
+        };
+
+        $cronFilePath = self::$configDir . '/' . self::$cronFile;
+        if (!empty($cronContents)) {
+            $cronContents .= " php ". dirname(__DIR__) ."/scripts/rsync_backup.php > /dev/null 2>&1";
+            file_put_contents($cronFilePath, $cronContents . PHP_EOL . PHP_EOL);
+        } elseif (file_exists($cronFilePath)) {
+            unlink($cronFilePath);
+        }
+
+        $outString = $returnCode = 0;
+        exec("update_cron", $outString, $returnCode);
+        return [$outString, $returnCode];
     }
 }

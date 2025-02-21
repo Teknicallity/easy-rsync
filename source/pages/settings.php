@@ -28,7 +28,7 @@ if ($_POST) {
     $results = print_r($_POST, true);
     file_put_contents(ERSettings::$configDir ."/form_output.txt", $results);
 
-    // save user config
+    // Update user config
     $currentConfig = ERSettings::getUserConfig();
     foreach ($currentConfig as $key => $value){
         if(isset($_POST[$key])){
@@ -36,12 +36,15 @@ if ($_POST) {
             $logger->logDebug("Key: $key, Old: $value, New: ". $_POST[$key]);
         }
     }
+
+    // Save user config
     try {
         $output = ERSettings::saveUserConfig($currentConfig);
     } catch (Exception $e) {
         $logger->logError("Could not save user config". $e->getMessage());
     }
     $logger->logInfo("Saved user config");
+
 
     $sources = null;
     $destinations = null;
@@ -65,6 +68,10 @@ if ($_POST) {
 
 $userConfig = ERSettings::getUserConfig();
 $paths = ERSettings::getPaths();
+
+if ($_POST) {
+    list($outString, $returnCode) = ERSettings::updateCron();
+}
 
 ?>
 <link type="text/css" rel="stylesheet" href="<?php autov('/webGui/styles/jquery.filetree.css') ?>">
@@ -170,6 +177,86 @@ $paths = ERSettings::getPaths();
     <blockquote class='inline_help'>
         <p>Any remote host destinations that files will be copied to</p>
     </blockquote>
+
+    <dl>
+        <dt>Backup Frequency</dt>
+        <dd>
+            <select id="backupFrequency" name="backupFrequency">
+                <?= mk_option($userConfig["backupFrequency"], "disabled", "Disabled") ?>
+                <?= mk_option($userConfig["backupFrequency"], "daily", "Daily") ?>
+                <?= mk_option($userConfig["backupFrequency"], "weekly", "Weekly") ?>
+                <?= mk_option($userConfig["backupFrequency"], "monthly", "Monthly") ?>
+                <?= mk_option($userConfig["backupFrequency"], "custom", "Custom") ?>
+            </select>
+        </dd>
+
+        <dt>Day of Week:</dt>
+        <dd>
+            <select id="frequencyWeekday" name="frequencyWeekday">
+                <?= mk_option($userConfig["frequencyWeekday"], "0", "Sunday") ?>
+                <?= mk_option($userConfig["frequencyWeekday"], "1", "Monday") ?>
+                <?= mk_option($userConfig["frequencyWeekday"], "2", "Tuesday") ?>
+                <?= mk_option($userConfig["frequencyWeekday"], "3", "Wednesday") ?>
+                <?= mk_option($userConfig["frequencyWeekday"], "4", "Thursday") ?>
+                <?= mk_option($userConfig["frequencyWeekday"], "5", "Friday") ?>
+                <?= mk_option($userConfig["frequencyWeekday"], "6", "Saturday") ?>
+            </select>
+        </dd>
+
+        <dt>Day of Month</dt>
+        <dd>
+            <select id="frequencyDayOfMonth" name="frequencyDayOfMonth">
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "1", "1st") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "2", "2nd") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "3", "3rd") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "4", "4th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "5", "5th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "6", "6th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "7", "7th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "8", "8th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "9", "9th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "10", "10th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "11", "11th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "12", "12th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "13", "13th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "14", "14th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "15", "15th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "16", "16th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "17", "17th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "18", "18th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "19", "19th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "20", "20th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "21", "21st") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "22", "22nd") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "23", "23rd") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "24", "24th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "25", "25th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "26", "26th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "27", "27th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "28", "28th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "29", "29th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "30", "30th") ?>
+                <?= mk_option($userConfig["frequencyDayOfMonth"], "31", "31st") ?>
+
+            </select>
+        </dd>
+
+        <dt>Hour</dt>
+        <dd>
+            <input type="number" min="0" max="23" id="frequencyHour" name="frequencyHour" value="<?= $userConfig["frequencyHour"] ?>">
+        </dd>
+
+        <dt>Minute</dt>
+        <dd>
+            <input type="number" min="0" max="59" id="frequencyMinute" name="frequencyMinute" value="<?= $userConfig["frequencyMinute"] ?>">
+        </dd>
+
+        <dt>Custom Entry</dt>
+        <dd>
+            <input type="text" id="frequencyCustom" name="frequencyCustom"
+                   value="<?= $userConfig["frequencyCustom"] ?>" placeholder="Will disable other time options">
+        </dd>
+    </dl>
 
     <dl>
         <dt>Done?</dt>
