@@ -31,22 +31,28 @@
 
 </CHANGES>
 
+<!--Remove previous plugin installs-->
+<FILE Run="/bin/bash">
+<INLINE>
+# Remove tarballs
+rm -f $(ls /boot/config/plugins/&pluginName;/&pluginName;-*.txz 2&gt;/dev/null | grep -v '&version;')
+echo "Removed old tarballs."
+
+# Remove slackware plugin package
+cd /var/log/packages
+removepkg &pluginName;* &gt; /dev/null
+echo "Removed old packages."
+</INLINE>
+</FILE>
+
 <!--Download image-->
 <FILE Name="&emhttp;/images/hello-world.png">
 <URL>https://raw.githubusercontent.com/&gitUser;/&repoName;/&gitBranch;/images/hello-world.png</URL>
 </FILE>
 
-<!--Remove previous tarballs-->
-<FILE Run="/bin/bash">
-<INLINE>
-rm -f $(ls /boot/config/plugins/&pluginName;/&pluginName;-*.txz 2&gt;/dev/null | grep -v '&version;')
-echo "remove old tarballs. Version: &version;"
-</INLINE>
-</FILE>
-
 <!--The install script.-->
 <FILE Name="/boot/config/plugins/&pluginName;/&pluginName;-&version;.txz" Run="upgradepkg --install-new">
-<URL>&repoLocation;/archive/&pluginName;-&version;.txz</URL>
+<!-- <URL>&repoLocation;/archive/&pluginName;-&version;.txz</URL> -->
 <MD5>&md5;</MD5>
 </FILE>
 
@@ -78,7 +84,7 @@ echo "-----------------------------------------------"
 echo "----------Uninstalling Intel GPU TOP-----------"
 echo "-----------------------------------------------"
 # Remove plugin related files
-removepkg &pluginName;-&version;
+removepkg &pluginName;&version;
 rm -rf &emhttp;
 rm -rf &plugin;
 echo
