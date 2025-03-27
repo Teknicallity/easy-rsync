@@ -12,24 +12,28 @@ dry_run=false
 
 # Function to display usage/help
 usage() {
-  echo "Usage: $0 [-d] [-v version-suffix] [-h] [-n plugin-name] [-y]"
+  echo "Usage: $0 [-v <suffix>] [-p <plg-filepath>] [-d] [-y] [-u <unraid-host>] [-h]"
   echo
-  echo "The .plg file should have the same name as its parent directory."
+  echo "This script builds a package from the source directory and optionally updates a .plg file."
+  echo "By default, it searches for a .plg file in the plugin's root directory with the same name as its parent directory."
   echo
   echo "Options:"
-  echo "  -v    Specify the version suffix (e.g., a)"
-  echo "  -p    Specify the .plg file to use. This will replace the md5 hash"
-  echo "  -d    Dry Run: don not write any changes to files"
-  echo "  -y    Accept mode: skip confirmation"
-  echo "  -u    Unraid host to send the archive to"
-  echo "  -h    Display this help message"
+  echo "  -v <suffix>    Specify a version suffix (e.g., 'a')."
+  echo "  -p <filepath>  Use a specific .plg file instead of searching. This will replace the md5 hash in the .plg file."
+  echo "  -d             Dry Run: Do not make any changes to files or directories."
+  echo "  -y             Accept mode: Skip all confirmations and proceed without user input."
+  echo "  -u <hostname>  Specifies an Unraid host where the archive will be sent. The script assumes this host is accessible via rsync."
+  echo "  -h             Display this help message and exit."
   echo
-  echo "Example:"
-  echo "  $0 -v beta -p /path/to/plugin.plg"
+  echo "Example usage:"
+  echo "  $0 -v b                       # Builds a package with 'b' as version suffix"
+  echo "  $0 -p /path/to/myplugin.plg   # Use a specific .plg file to update"
+  echo "  $0 -d                         # Performs a dry run without making any changes to the filesystem."
+  echo
 }
 
 # Parse command-line options
-while getopts ":v:p:u:dylh" opt; do
+while getopts ":v:p:u:dyh" opt; do
   case ${opt} in
     v)
       version_suffix="$OPTARG"
@@ -60,14 +64,27 @@ done
 # Shift to remove the parsed options
 shift $((OPTIND - 1))
 
+if [ "$EUID" -ne 0 ]; then
+    echo "Please run as root"
+    exit 1
+fi
+
+# Generate the version string
+version_date=$(date +"%Y.%m.%d")
+if [[ -n "$version_suffix" ]]; then
+  version=$version_date$version_suffix
+else
+  version=$version_date
+fi
+
 # Skip confirmation if force flag is enabled
 if [[ "$accept_flag" == false ]]; then
   # Display configuration
   echo -e "Plg filepath: \t'$plg_filepath'"
   echo -e "Plugin name: \t'$plugin_name'"
-  echo -e "Version suffix: '$version_suffix'"
+  echo -e "Version string: '$version'"
 
-  read -p "Are these correct? (y/Y to proceed): " user_input
+  read -r -p "Are these correct? (y/Y to proceed): " user_input
   if [[ "$user_input" != "y" && "$user_input" != "Y" ]]; then
     echo "Exiting."
     exit 1
@@ -86,14 +103,6 @@ archive_dir="$plugin_dir/archive"
 tmpdir="$plugin_dir/tmp/tmp.$(( $RANDOM * 19318203981230 + 40 ))"
 trap "rm -rf $tmpdir" EXIT
 
-# Generate the version string
-version_date=$(date +"%Y.%m.%d")
-if [[ -n "$version_suffix" ]]; then
-  version=$version_date-$version_suffix
-else
-  version=$version_date
-fi
-
 # Create necessary directories
 mkdir -p "$tmpdir/usr/local/emhttp/plugins/$plugin_name"
 mkdir -p "$archive_dir"
@@ -103,10 +112,11 @@ cd "$src_dir" || { echo "Source directory $src_dir does not exist."; exit 1; }
 
 # Ensure permissions and copy files to the temporary directory
 chmod 0755 -R "$src_dir"
+# Cannot put in quotes or else it fails
 cp --parents -f $(find . -type f ! \( -iname "pkg_build.sh" -o -iname "sftp-config.json" \) ) \
     "$tmpdir/usr/local/emhttp/plugins/$plugin_name/"
 chmod 0755 -R "$tmpdir"
-chown root:root -R "$tmpdir"
+#chown root:root -R "$tmpdir"
 chmod 0755 "$plugin_dir"
 
 # If dry run, only create archive package in tmp directory
@@ -121,7 +131,7 @@ echo
 
 # Create the package
 cd "$tmpdir" || { echo "Temporary directory $tmpdir does not exist."; exit 1; }
-if ! makepkg -l y -c n "$archive_file" ; then
+if ! makepkg --linkadd y --chown y "$archive_file" ; then
   echo "Failed to make package. Exiting."
   exit 1
 fi
