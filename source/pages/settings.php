@@ -176,12 +176,13 @@ if ($_POST) {
     </dl>
     <blockquote class='inline_help'>
         <p>Any remote host destinations that files will be copied to</p>
+        <p>In the format: <code>[User@]Host:/Folder</code></p>
     </blockquote>
 
     <dl>
         <dt>Backup Frequency</dt>
         <dd>
-            <select id="backupFrequency" name="backupFrequency">
+            <select id="backupFrequency" name="backupFrequency" onchange="updateCronEntries();">
                 <?= mk_option($userConfig["backupFrequency"], "disabled", "Disabled") ?>
                 <?= mk_option($userConfig["backupFrequency"], "daily", "Daily") ?>
                 <?= mk_option($userConfig["backupFrequency"], "weekly", "Weekly") ?>
@@ -313,6 +314,8 @@ if ($_POST) {
                 console.error('Request failed:', jqXHR.status, textStatus, errorThrown);
             });
         });
+
+        updateCronEntries();
     });
 
     function addSelectionToList(element) {
@@ -338,6 +341,26 @@ if ($_POST) {
         $(element).parent().slideUp('fast', function () {
             $el.prop('checked', false);
         });
+    }
+
+    function updateCronEntries() {
+        $('#frequencyWeekday, #frequencyDayOfMonth, #frequencyHour, #frequencyMinute, #frequencyCustom').prop('disabled', true);
+        switch ($('#backupFrequency').val()) {
+            case 'disabled':
+                break;
+            case 'daily':
+                $('#frequencyHour, #frequencyMinute').prop('disabled', false);
+                break;
+            case 'weekly':
+                $('#frequencyHour, #frequencyMinute, #frequencyWeekday').prop('disabled', false);
+                break;
+            case 'monthly':
+                $('#frequencyHour, #frequencyMinute, #frequencyDayOfMonth').prop('disabled', false);
+                break;
+            default:
+                $('#frequencyCustom').prop('disabled', false);
+                break;
+        }
     }
 
     // $('#erSettingsForm').on('submit', function () {
