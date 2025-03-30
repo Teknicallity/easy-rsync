@@ -4,14 +4,15 @@ require_once dirname(__DIR__) ."/include/BackupHelper.php";
 require_once dirname(__DIR__) ."/include/ERHelper.php";
 require_once dirname(__DIR__) ."/include/ERSettings.php";
 require_once dirname(__DIR__) ."/include/Logger.php";
-require_once dirname(__DIR__) ."/include/NotificationService.php";
+require_once dirname(__DIR__) ."/include/notifications/Notification.php";
 
 use unraid\plugins\EasyRsync\BackupHelper;
 use unraid\plugins\EasyRsync\ERHelper;
 use unraid\plugins\EasyRsync\ERSettings;
 use unraid\plugins\EasyRsync\Logger;
 use unraid\plugins\EasyRsync\LogLevel;
-use unraid\plugins\EasyRsync\NotificationService;
+use unraid\plugins\EasyRsync\Notification;
+use unraid\plugins\EasyRsync\NotificationLevel;
 
 $userConfig = ERSettings::getUserConfig();
 
@@ -32,7 +33,7 @@ $backupStartedTime = new DateTime();
 $logger->logDebug('Backup script called'. $backupStartedTime->format('c'));
 
 if (ERHelper::isBackupRunning()) {
-    NotificationService::notify("Easy Rsync", "Backup Running");
+    Notification::simpleNotify("Sync Already Running", "Cannot start another sync operation. Sync is still running.");
     $logger->logWarning("Backup already running. Cannot start new backup");
     exit();
 }
@@ -60,7 +61,7 @@ $logger->logInfo('Welcome test message');
 // check if array is online
 if (!ERHelper::isArrayOnline()) {
     $logger->logError('Array is not online.');
-    NotificationService::notify('EasyRsync: Array is not online', 'Cannot sync. Array is not running.');
+    Notification::simpleNotify('Array is not online', 'Cannot sync. Array is not running.');
     exit();
 }
 $logger->logDebug('Array is online');
@@ -99,7 +100,7 @@ $logger->logDebug($rsyncOptions);
 foreach ($sources as $source) {
     foreach ($destinations as $destination) {
         if (ERHelper::isAbortRequested()) {
-            handleAbort();
+            handleAbortRequest();
         }
         // Construct and execute the rsync command.
         $command = "rsync $rsyncOptions '$source' '$destination' --log-file='" . ERSettings::getRsyncLogFilePath() . "'";
@@ -116,12 +117,16 @@ foreach ($sources as $source) {
 handleEnd();
 
 
-function handleAbort(): never {
+function handleAbortRequest(): never {
     global $logger;
-    NotificationService::notify("Easy Rsync", "Sync Aborted", "The sync operation was aborted");
+    $notification = new Notification(
+        "Sync Aborted",
+        "The sync operation was aborted by user",
+        level: NotificationLevel::WARNING
+    );
     $logger->logWarning("Sync aborted");
     // which sources were synced until which destinations?
-    cleanup(failure: true);
+    cleanup(failure: true, notification: $notification);
 }
 
 function handleEnd(): never {
@@ -131,22 +136,23 @@ function handleEnd(): never {
     $backupTime = $backupStartedTime->diff($backupFinishedTime);
     $backupDuration = $backupTime->format('%H:%I:%S');
 
-    NotificationService::notify("Easy Rsync", "Sync completed in $backupDuration","");
+    $notification = new Notification("Sync Completed", "Completed in $backupDuration");
+
     $logger->logInfo("Finished syncing in $backupDuration");
-    cleanup();
+    cleanup(notification: $notification);
 }
 
-function cleanup(bool $failure = false): never {
+function cleanup(bool $failure = false, Notification $notification = null): never {
     global $logger;
     $logger->logInfo("Cleaning up");
     if (file_exists(ERSettings::getStateRsyncAbortedFilePath())) {
         unlink(ERSettings::getStateRsyncAbortedFilePath());
         $logger->logDebug("Removed abort status file");
     }
-    
     unlink(ERSettings::getStateRsyncRunningFilePath());
     $logger->logDebug("Remove running status file");
-    
+
+    $notification?->send();
 
     if ($failure) {
         $logger->logWarning("Something went wrong");
@@ -154,5 +160,5 @@ function cleanup(bool $failure = false): never {
     } else {
         $logger->logInfo("Finished syncing");
         exit(0);
-    };
+    }
 }
