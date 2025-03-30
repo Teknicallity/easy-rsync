@@ -105,7 +105,7 @@ $paths = ERSettings::getPaths();
     <dl>
         <dt>Capture file datetimes</dt>
         <dd>
-            <select id="rsyncTimes" name="rsyncTimes">
+            <select id="rsyncTimes" name="rsyncTimes" class="rsyncOption">
                 <?= mk_option($userConfig["rsyncTimes"], "false", "No") ?>
                 <?= mk_option($userConfig["rsyncTimes"], "true", "Yes") ?>
             </select>
@@ -118,7 +118,7 @@ $paths = ERSettings::getPaths();
     <dl>
         <dt>When to delete old files</dt>
         <dd>
-            <select id="rsyncDelete" name="rsyncDelete">
+            <select id="rsyncDelete" name="rsyncDelete" class="rsyncOption">
                 <!-- <option value="after">After</option>
                 <option value="before">Before</option>
                 <option value="during">During</option>
@@ -137,7 +137,7 @@ $paths = ERSettings::getPaths();
     <dl>
         <dt>Compress backup</dt>
         <dd>
-            <select id="rsyncCompress" name="rsyncCompress">
+            <select id="rsyncCompress" name="rsyncCompress" class="rsyncOption">
                 <?= mk_option($userConfig["rsyncCompress"], "false", "No") ?>
                 <?= mk_option($userConfig["rsyncCompress"], "true", "Yes") ?>
             </select>
@@ -146,6 +146,14 @@ $paths = ERSettings::getPaths();
     <blockquote class="inline_help">
 
     </blockquote>
+
+    <dl>
+        <dt>Custom Rsync Parameters</dt>
+        <dd>
+            <input type="text" id="rsyncCustom" name="rsyncCustom" oninput="updateRsyncEntries();"
+                   value="<?= $userConfig["rsyncCustom"] ?>" placeholder="Will override other Rsync options">
+        </dd>
+    </dl>
 
     <dl>
         <dt>Easy Rsync Log Level</dt>
@@ -377,6 +385,16 @@ $paths = ERSettings::getPaths();
             default:
                 $('#frequencyCustom').prop('disabled', false);
                 break;
+        }
+    }
+
+    function updateRsyncEntries() {
+        let hasText = $('#rsyncCustom').val().trim().length > 0;
+
+        if (hasText) {
+            $('.rsyncOption').prop('disabled', true);
+        } else {
+            $('.rsyncOption').prop('disabled', false);
         }
     }
 
