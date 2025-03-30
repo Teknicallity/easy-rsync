@@ -12,7 +12,10 @@ Take list of directories to backup
 take remote backup host and path
 */
 
-$logger = new Logger(LogLevel::DEBUG);
+$userConfig = ERSettings::getUserConfig();
+$paths = ERSettings::getPaths();
+
+$logger = new Logger(loglevelString: $userConfig["logLevel"]);
 
 try {
     $appName = ERSettings::$appName;
@@ -65,9 +68,6 @@ if ($_POST) {
     }
     $logger->logInfo("Saved backup paths result");
 }
-
-$userConfig = ERSettings::getUserConfig();
-$paths = ERSettings::getPaths();
 
 if ($_POST) {
     list($outString, $returnCode) = ERSettings::updateCron();
