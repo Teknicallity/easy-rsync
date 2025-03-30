@@ -5,14 +5,17 @@ require_once dirname(__DIR__) ."/include/ERHelper.php";
 require_once dirname(__DIR__) ."/include/ERSettings.php";
 require_once dirname(__DIR__) ."/include/Logger.php";
 require_once dirname(__DIR__) ."/include/notifications/Notification.php";
+require_once dirname(__DIR__) ."/include/paths/Destination.php";
+require_once dirname(__DIR__) ."/include/paths/PathHelper.php";
 
 use unraid\plugins\EasyRsync\BackupHelper;
+use unraid\plugins\EasyRsync\Destination;
 use unraid\plugins\EasyRsync\ERHelper;
 use unraid\plugins\EasyRsync\ERSettings;
 use unraid\plugins\EasyRsync\Logger;
-use unraid\plugins\EasyRsync\LogLevel;
 use unraid\plugins\EasyRsync\Notification;
 use unraid\plugins\EasyRsync\NotificationLevel;
+use unraid\plugins\EasyRsync\PathHelper;
 
 $userConfig = ERSettings::getUserConfig();
 
@@ -92,6 +95,13 @@ if (empty($destinations)) {
 }
 
 //Summary map for storing final log/notifier messages for each source and or destination
+$syncSummary = array(array());
+foreach ($sources as $source) {
+    foreach ($destinations as $destination) {
+        $syncSummary[$source][$destination] = "Skipped";
+    }
+}
+$logger->logDebug("Sync summary\n". json_encode($syncSummary));
 
 $rsyncOptions = BackupHelper::buildRsyncOptions(doDryRun: $dryRunMode);
 $logger->logDebug($rsyncOptions);
@@ -106,11 +116,15 @@ foreach ($sources as $source) {
         $command = "rsync $rsyncOptions '$source' '$destination' --log-file='" . ERSettings::getRsyncLogFilePath() . "'";
         $logger->logInfo("Current command: $command");
         exec($command, $output, $return_var);
-        
+
         if ($return_var !== 0) {
             $logger->logError("Failed to sync '$source' with '$destination'. Check Rsync Log.");
+
+            $syncSummary[$source][$destination] = "FAILED";
         } else {
             $logger->logInfo("Successfully synced '$source' with '$destination'.");
+
+            $syncSummary[$source][$destination] = "Success";
         }
     }
 }
@@ -144,6 +158,10 @@ function handleEnd(): never {
 
 function cleanup(bool $failure = false, Notification $notification = null): never {
     global $logger;
+    global $syncSummary;
+    global $sources;
+    global $destinations;
+
     $logger->logInfo("Cleaning up");
     if (file_exists(ERSettings::getStateRsyncAbortedFilePath())) {
         unlink(ERSettings::getStateRsyncAbortedFilePath());
@@ -151,6 +169,23 @@ function cleanup(bool $failure = false, Notification $notification = null): neve
     }
     unlink(ERSettings::getStateRsyncRunningFilePath());
     $logger->logDebug("Remove running status file");
+
+    if (!empty($syncSummary)) {
+        $message = "";
+        foreach ($sources as $source) {
+            foreach ($destinations as $destination) {
+                $sourceParts = PathHelper::deconstructPath($source);
+                $destinationParts = new Destination($destination);
+
+                $sourcePathEnd = $sourceParts[array_key_last($sourceParts)] ?? 'null';
+                $destinationHostPath = $destinationParts->host . ':' . $destinationParts->fullPath;
+
+                $message .= $sourcePathEnd . ' -> ' . $destinationHostPath . ' ' . $syncSummary[$source][$destination] . "\n";
+            }
+        }
+
+        $notification?->setMessage($message);
+    }
 
     $notification?->send();
 
