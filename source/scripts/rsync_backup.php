@@ -159,8 +159,6 @@ function handleEnd(): never {
 function cleanup(bool $failure = false, Notification $notification = null): never {
     global $logger;
     global $syncSummary;
-    global $sources;
-    global $destinations;
 
     $logger->logInfo("Cleaning up");
     if (file_exists(ERSettings::getStateRsyncAbortedFilePath())) {
@@ -171,19 +169,7 @@ function cleanup(bool $failure = false, Notification $notification = null): neve
     $logger->logDebug("Remove running status file");
 
     if (!empty($syncSummary)) {
-        $message = "";
-        foreach ($sources as $source) {
-            foreach ($destinations as $destination) {
-                $sourceParts = PathHelper::deconstructPath($source);
-                $destinationParts = new Destination($destination);
-
-                $sourcePathEnd = $sourceParts[array_key_last($sourceParts)] ?? 'null';
-                $destinationHostPath = $destinationParts->host . ':' . $destinationParts->fullPath;
-
-                $message .= $sourcePathEnd . ' -> ' . $destinationHostPath . ' ' . $syncSummary[$source][$destination] . "\n";
-            }
-        }
-
+        $message = getNotificationPathsMessage($syncSummary);
         $notification?->setMessage($message);
     }
 
@@ -196,4 +182,27 @@ function cleanup(bool $failure = false, Notification $notification = null): neve
         $logger->logInfo("Finished syncing");
         exit(0);
     }
+}
+
+/**
+ * @param array $syncSummary
+ * @return string
+ */
+function getNotificationPathsMessage(array $syncSummary): string {
+    global $sources;
+    global $destinations;
+
+    $message = "";
+    foreach ($sources as $source) {
+        foreach ($destinations as $destination) {
+            $sourceParts = PathHelper::deconstructPath($source);
+            $destinationParts = new Destination($destination);
+
+            $sourcePathEnd = $sourceParts[array_key_last($sourceParts)] ?? 'null';
+            $destinationHostPath = $destinationParts->host . ':' . $destinationParts->fullPath;
+
+            $message .= $sourcePathEnd . ' -> ' . $destinationHostPath . ' ' . $syncSummary[$source][$destination] . "\n";
+        }
+    }
+    return $message;
 }
