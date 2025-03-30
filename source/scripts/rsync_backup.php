@@ -101,7 +101,6 @@ foreach ($sources as $source) {
         $syncSummary[$source][$destination] = "Skipped";
     }
 }
-$logger->logDebug("Sync summary\n". json_encode($syncSummary));
 
 $rsyncOptions = BackupHelper::buildRsyncOptions(doDryRun: $dryRunMode);
 $logger->logDebug($rsyncOptions);
