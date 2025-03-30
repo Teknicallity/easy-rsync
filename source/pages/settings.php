@@ -12,11 +12,6 @@ Take list of directories to backup
 take remote backup host and path
 */
 
-$userConfig = ERSettings::getUserConfig();
-$paths = ERSettings::getPaths();
-
-$logger = new Logger(loglevelString: $userConfig["logLevel"]);
-
 try {
     $appName = ERSettings::$appName;
     echo "/plugins/" . $appName . "/include/http_handler.php\n";
@@ -25,6 +20,10 @@ try {
 }
 
 if ($_POST) {
+    $userConfig = ERSettings::getUserConfig();
+
+    $logger = new Logger(loglevelString: $userConfig["logLevel"]);
+
     if (!file_exists(ERSettings::$configDir)) {
         mkdir(ERSettings::$configDir);
     }
@@ -72,6 +71,9 @@ if ($_POST) {
 if ($_POST) {
     list($outString, $returnCode) = ERSettings::updateCron();
 }
+
+$userConfig = ERSettings::getUserConfig();
+$paths = ERSettings::getPaths();
 
 ?>
 <link type="text/css" rel="stylesheet" href="<?php autov('/webGui/styles/jquery.filetree.css') ?>">
@@ -144,9 +146,24 @@ if ($_POST) {
     <blockquote class="inline_help">
 
     </blockquote>
+
+    <dl>
+        <dt>Easy Rsync Log Level</dt>
+        <dd>
+            <select id="logLevel" name="logLevel">
+                <?= mk_option($userConfig["logLevel"], "DEBUG", "Debug") ?>
+                <?= mk_option($userConfig["logLevel"], "INFO", "Info") ?>
+                <?= mk_option($userConfig["logLevel"], "WARNING", "Warning") ?>
+                <?= mk_option($userConfig["logLevel"], "ERROR", "Error") ?>
+            </select>
+        </dd>
+    </dl>
+    <blockquote class="inline_help">
+        Set the log level for the plugin log. Recommended to keep on Info.
+    </blockquote>
     
     <dl>
-        <dt>Local directories</dt>
+        <dt>Local Directories</dt>
         <dd>
             <div style="display: table; width: 300px;">
                 <textarea id="sourceDirectories" name="sourceDirectories" onfocus="$(this).next('.ft').slideDown('fast');" 
@@ -163,7 +180,7 @@ if ($_POST) {
     </blockquote>
     
     <dl>
-        <dt>Local directories</dt>
+        <dt>Destination Hosts</dt>
         <dd>
             <div style="display: table; width: 300px;">
                 <textarea id="destinationHosts" name="destinationHosts" onfocus="$(this).next('.ft').slideDown('fast');" 
