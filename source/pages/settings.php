@@ -341,6 +341,7 @@ $paths = ERSettings::getPaths();
         });
 
         updateCronEntries();
+        updateRsyncEntries();
     });
 
     function addSelectionToList(element) {
