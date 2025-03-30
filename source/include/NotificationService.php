@@ -25,8 +25,8 @@ class NotificationService {
         string            $message = "",
         NotificationLevel $level = NotificationLevel::NORMAL): void {
 
-        $command = '/usr/local/emhttp/webGui/scripts/notify -e "Easy Rsync" -s "' . escapeshellarg($subject) . '" ' .
-                '-d "' . escapeshellarg($description) . '" -m "' . escapeshellarg($message) . '" -i "' . $level . '" ' .
+        $command = '/usr/local/emhttp/webGui/scripts/notify -e "Easy Rsync" -s ' . escapeshellarg($subject) . ' ' .
+                '-d ' . escapeshellarg($description) . ' -m ' . escapeshellarg($message) . ' -i ' . $level->value . ' ' .
                 '-l "/Settings/AB.Main"';
         shell_exec($command);
     }
