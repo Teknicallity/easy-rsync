@@ -2,7 +2,9 @@
 
 namespace unraid\plugins\EasyRsync;
 
-require_once "/usr/local/emhttp/plugins/dynamix/include/Wrappers.php";
+$docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
+
+require_once "$docroot/webGui/include/Wrappers.php";
 
 class ERSettings {
 
