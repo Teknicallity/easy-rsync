@@ -14,9 +14,9 @@ class SyncList {
         $this->entries = $entries;
     }
 
-    public static function fromFile(string $filename): SyncList {
-//        $filePath = ERSettings::getPathsJsonFilePath();
-        $filePath = ERSettings::$configDir . '/' . $filename;
+    public static function fromFile(): SyncList {
+        $filePath = ERSettings::getPathsJsonFilePath();
+//        $filePath = ERSettings::$configDir . '/' . $filename;
 
         $fileContents = null;
         if (file_exists($filePath)) {
@@ -27,7 +27,7 @@ class SyncList {
         return new SyncList($syncEntries);
     }
 
-    public function saveToFile(string $filename): void {
+    public function saveToFile(): void {
         if (empty($this->entries)) {
             return;
         }
@@ -36,10 +36,11 @@ class SyncList {
             return;
         }
 
+        $filePath = ERSettings::getPathsJsonFilePath();
         $output = ['syncList' => $this->entries];
 
         file_put_contents(
-            ERSettings::$configDir . '/' . $filename,
+            $filePath,
             json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
         );
     }
