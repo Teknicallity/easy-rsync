@@ -81,7 +81,15 @@ $paths = ERSettings::getPaths();
 
 
 <form id="erSettingsForm" method="post">
-    <div class="title">Settings</div>
+    <div class="title">
+        <div style="display: flex; justify-content: space-between">
+            <span>Settings</span>
+            <div>
+                <span>Status: </span>
+                <span id="backupStatusTextSettings" class="backupStatusText"></span>
+            </div>
+        </div>
+    </div>
 
     <dl>
         <dt>Text Checkbox</dt>
@@ -345,13 +353,13 @@ $paths = ERSettings::getPaths();
     });
 
     function addSelectionToList(element) {
-        $el = $(element).prev().find("input:checked");
-        $textarea = $(element).parent().prev();
+        let $el = $(element).prev().find("input:checked");
+        let $textarea = $(element).parent().prev();
 
         console.debug($el, $textarea);
 
         if ($el.length !== 0) {
-            var checked = $el
+            let checked = $el
                 .map(function () {
                     return $(this).parent().find('a:first').attr('rel');
                 })
