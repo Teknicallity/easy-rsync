@@ -1,12 +1,15 @@
 <?php
 
+namespace unraid\plugins\EasyRsync;
+
+use Exception;
+
 require_once dirname(__DIR__) ."/include/ERSettings.php";
 require_once dirname(__DIR__) ."/include/Logger.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncList.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncEntry.php";
 require_once "/usr/local/emhttp/plugins/dynamix/include/Helpers.php"; //mk_option
 
-use unraid\plugins\EasyRsync\ERSettings;
-use unraid\plugins\EasyRsync\LogLevel;
-use unraid\plugins\EasyRsync\Logger;
 /*
 Take list of directories to backup
 take remote backup host and path
@@ -23,6 +26,14 @@ if ($_POST) {
     $userConfig = ERSettings::getUserConfig();
 
     $logger = new Logger(loglevelString: $userConfig["logLevel"]);
+
+//    ob_start();
+//    var_dump($_POST);
+//    $output = ob_get_clean();
+//
+//    $logger->logInfo($output);
+//
+//    die();
 
     if (!file_exists(ERSettings::$configDir)) {
         mkdir(ERSettings::$configDir);
@@ -47,25 +58,22 @@ if ($_POST) {
     }
     $logger->logInfo("Saved user config");
 
+    // Save sync job paths
+    $syncPathsNotNull = isset($_POST["sourceDirectories"]) && isset($_POST["destinationHosts"]);
+    if ($syncPathsNotNull) {
+        $logger->logDebug(print_r($_POST["sourceDirectories"], true));
+        $logger->logDebug(print_r($_POST["destinationHosts"], true));
 
-    $sources = null;
-    $destinations = null;
-    // save filepaths and hosts
-    if(isset($_POST["sourceDirectories"])){
-        $sources = explode("\n", $_POST["sourceDirectories"]);
+        $syncList = SyncList::fromFormData($_POST);
+
+        $logger->logDebug("Got path results");
+        try {
+            $syncList->saveToFile();
+            $logger->logInfo("Saved backup paths result");
+        } catch (Exception $e) {
+            $logger->logError("Could not save paths". $e->getMessage());
+        }
     }
-    if(isset($_POST["destinationHosts"])){
-        $destinations = explode("\n", $_POST["destinationHosts"]);
-    }
-    $logger->logDebug("Got path results");
-    $logger->logDebug(print_r($sources, true));
-    $logger->logDebug(print_r($destinations, true));
-    try {
-        ERSettings::saveSourcesAndDestinations($sources, $destinations);
-    } catch (Exception $e) {
-        $logger->logError("Could not save paths". $e->getMessage());
-    }
-    $logger->logInfo("Saved backup paths result");
 }
 
 if ($_POST) {
@@ -73,11 +81,32 @@ if ($_POST) {
 }
 
 $userConfig = ERSettings::getUserConfig();
-$paths = ERSettings::getPaths();
+$syncList = SyncList::fromFile();
 
 ?>
 <link type="text/css" rel="stylesheet" href="<?php autov('/webGui/styles/jquery.filetree.css') ?>">
 <script src="<?php autov('/webGui/javascript/jquery.filetree.js') ?>" charset="utf-8"></script>
+<!--<script src="<php autov('/plugins/easy.rsync/javascript/unraid.js') ?>" charset="utf-8"></script>-->
+
+<style>
+    .sync-entry {
+        padding: 15px;
+        border: 1px solid #ddd;
+    }
+
+    .sync-entry(:last-child) {
+        margin-bottom: 20px;
+    }
+
+    .fileTree, .sync-entry textarea {
+        background: rgba(0,0,0,0.05);
+    }
+
+    .deleteSyncJobButton {
+        margin-top: 0;
+        margin-bottom: 0;
+    }
+</style>
 
 
 <form id="erSettingsForm" method="post">
@@ -177,40 +206,6 @@ $paths = ERSettings::getPaths();
     <blockquote class="inline_help">
         Set the log level for the plugin log. Recommended to keep on Info.
     </blockquote>
-    
-    <dl>
-        <dt>Local Directories</dt>
-        <dd>
-            <div style="display: table; width: 300px;">
-                <textarea id="sourceDirectories" name="sourceDirectories" onfocus="$(this).next('.ft').slideDown('fast');" 
-                style="resize: vertical; width: 400px;"><?= implode("\r\n", $paths["sources"]) ?></textarea>
-                <div class="ft" style="display: none;">
-                    <div class="fileTreeDiv"></div>
-                    <button onclick="addSelectionToList(this);  return false;">Add to sources</button>
-                </div>
-            </div>
-        </dd>
-    </dl>
-    <blockquote class='inline_help'>
-        <p>Any local directories that should be backed up</p>
-    </blockquote>
-    
-    <dl>
-        <dt>Destination Hosts</dt>
-        <dd>
-            <div style="display: table; width: 300px;">
-                <textarea id="destinationHosts" name="destinationHosts" onfocus="$(this).next('.ft').slideDown('fast');" 
-                    style="resize: vertical; width: 400px;"><?= implode("\r\n", $paths["destinations"]) ."\r\n" ?></textarea>
-                <!-- <div class="ft" style="display: none;">
-                    <button onclick="">Add to hosts</button>
-                </div> -->
-            </div>
-        </dd>
-    </dl>
-    <blockquote class='inline_help'>
-        <p>Any remote host destinations that files will be copied to</p>
-        <p>In the format: <code>[User@]Host:/Folder</code></p>
-    </blockquote>
 
     <dl>
         <dt>Backup Frequency</dt>
@@ -292,6 +287,70 @@ $paths = ERSettings::getPaths();
         </dd>
     </dl>
 
+    <div class="title">
+        Sync Jobs
+    </div>
+    <div id="syncEntriesContainer">
+        <?php foreach($syncList->entries as $index => $syncEntry) { ?>
+        <div class="sync-entry" data-index="<?= htmlspecialchars($index); ?>">
+            <dl>
+                <dt>Local Directories</dt>
+                <dd>
+                    <div style="display: table; width: 300px;">
+                        <textarea id="sourceDirectories_<?= htmlspecialchars($index); ?>"
+                                  name="sourceDirectories[]"
+                                  onfocus="$(this).next('.ft').slideDown('fast');"
+                                  style="resize: vertical; width: 400px;"
+                                  rows="3"><?= implode("\r\n", $syncEntry->sources) ?></textarea>
+                        <div class="ft" style="display: none;">
+                            <div class="fileTreeDiv"></div>
+                            <button onclick="addSelectionToList(this);  return false;">Add to sources</button>
+                        </div>
+                    </div>
+                </dd>
+            </dl>
+            <blockquote class='inline_help'>
+                <p>Any local directories that should be backed up</p>
+            </blockquote>
+
+            <dl>
+                <dt>Destination Hosts</dt>
+                <dd>
+                    <div style="display: table; width: 300px;">
+                        <textarea id="destinationHosts_<?= htmlspecialchars($index); ?>"
+                                  name="destinationHosts[]"
+                                  onfocus="$(this).next('.ft').slideDown('fast');"
+                                  style="resize: vertical; width: 400px;"
+                                  rows="3"><?= implode("\r\n", $syncEntry->destinations) ."\r\n" ?></textarea>
+                        <!-- <div class="ft" style="display: none;">
+                            <button onclick="">Add to hosts</button>
+                        </div> -->
+                    </div>
+                </dd>
+            </dl>
+            <blockquote class='inline_help'>
+                <p>Any remote host destinations that files will be copied to</p>
+                <p>In the format: <code>[User@]Host:/Folder</code></p>
+            </blockquote>
+            <dl>
+                <dt>&nbsp;</dt>
+                <dd>
+                    <button type="button" class="deleteSyncJobButton" onclick="removeSyncEntry(this)">Remove</button>
+                </dd>
+            </dl>
+        </div>
+        <?php } ?>
+    </div>
+
+    <dl>
+        <dt>&nbsp;</dt>
+        <dd>
+            <a id="addSyncJobButton" style="cursor: pointer;">
+                <i class="fa fa-fw fa-plus"></i>Add Another Sync Job
+            </a>
+        </dd>
+    </dl>
+
     <dl>
         <dt>Done?</dt>
         <dd>
@@ -312,7 +371,24 @@ $paths = ERSettings::getPaths();
     const urlSettings = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";
     $(function() {
         $('.fileTreeDiv').fileTree({
+            root: '/mnt/',
+            top: '/mnt/',
+            filter: '',
             multiSelect: true,
+            allowBrowsing: true
+        });
+
+        $(document).on('mousedown', function(event) {
+            $('textarea + .ft').each(function() {
+                var $ftDiv = $(this);
+                var $container = $ftDiv.parent();
+
+                if (!$container.is(event.target) && $container.has(event.target).length === 0) {
+                    if ($ftDiv.is(':visible')) {
+                        $ftDiv.slideUp('fast');
+                    }
+                }
+            });
         });
 
         // Start manual backup
@@ -348,13 +424,75 @@ $paths = ERSettings::getPaths();
             });
         });
 
+        $('#addSyncJobButton').on('click', function() {
+            console.log('clicked addSyncJobButton');
+
+            let syncEntryIndex = <?= count($syncList->entries) ?>;
+
+            const newSyncEntry = `
+            <div class="sync-entry" data-index="${syncEntryIndex}">
+                <dl>
+                    <dt>Local Directories</dt>
+                    <dd>
+                        <div style="display: table; width: 300px;">
+                            <textarea id="sourceDirectories_${syncEntryIndex}"
+                                    name="sourceDirectories[]"
+                                    onfocus="$(this).next('.ft').slideDown('fast');"
+                                    style="resize: vertical; width: 400px;"
+                                    rows="3"></textarea>
+                            <div class="ft" style="display: none;">
+                                <div class="fileTreeDiv"></div>
+                                <button onclick="addSelectionToList(this);  return false;">Add to sources</button>
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+                <blockquote class='inline_help'>
+                    <p>Any local directories that should be backed up</p>
+                </blockquote>
+                <dl>
+                    <dt>Destination Hosts</dt>
+                    <dd>
+                        <textarea id="destinationHosts_${syncEntryIndex}"
+                                name="destinationHosts[]"
+                                style="resize: vertical; width: 400px;"
+                                rows="3"></textarea>
+                    </dd>
+                </dl>
+                <blockquote class='inline_help'>
+                    <p>Any remote host destinations that files will be copied to</p>
+                    <p>In the format: <code>[User@]Host:/Folder</code></p>
+                </blockquote>
+                <dl>
+                    <dt>&nbsp;</dt>
+                    <dd><button type="button" onclick="removeSyncEntry(this)">Remove</button></dd>
+                </dl>
+            </div>
+            `;
+
+            $('#syncEntriesContainer').append(newSyncEntry);
+
+            // Reinitialize the file tree functionality for the new textarea
+            $('#sourceDirectories_' + syncEntryIndex).next('.ft').find('.fileTreeDiv').fileTree({
+                root: '/mnt/',
+                top: '/mnt/',
+                filter: '',
+                multiSelect: true,
+                allowBrowsing: true
+            }, function(file) {
+                $('#sourceDirectories_' + syncEntryIndex).val(file).trigger('change');
+            });
+
+            syncEntryIndex++;
+        });
+
         updateCronEntries();
         updateRsyncEntries();
     });
 
     function addSelectionToList(element) {
-        let $el = $(element).prev().find("input:checked");
-        let $textarea = $(element).parent().prev();
+        $el = $(element).prev().find("input:checked");
+        $textarea = $(element).parent().prev();
 
         console.debug($el, $textarea);
 
@@ -405,6 +543,12 @@ $paths = ERSettings::getPaths();
         } else {
             $('.rsyncOption').prop('disabled', false);
         }
+    }
+
+    function removeSyncEntry(element) {
+        $(element).closest('.sync-entry').slideUp('fast', function() {
+            $(this).remove();
+        });
     }
 
     // $('#erSettingsForm').on('submit', function () {
