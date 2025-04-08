@@ -6,7 +6,7 @@ class Destination {
     public string $username;
     public string $host;
     public array $pathParts;
-    public string $fullPath;
+    public string $path;
 
     public function __construct(string $destination) {
         $parts = explode('@', $destination, 2);
@@ -23,13 +23,17 @@ class Destination {
         $host = $hostAndPathParts[0];
         $fullPath = $hostAndPathParts[1] ?? '';
 
-        $pathComponents = PathHelper::deconstructPath($fullPath);
+        $pathComponents = PathHelper::extractPathComponents($fullPath);
 
         $this->username = $username;
         $this->host = $host;
         $this->pathParts = $pathComponents;
-        $this->fullPath = $fullPath;
+        $this->path = $fullPath;
 
         return $this;
+    }
+    
+    public function hostAndPath(): string {
+        return $this->host . ':' . $this->path;
     }
 }
