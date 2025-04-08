@@ -75,5 +75,5 @@ use unraid\plugins\EasyRsync\ERSettings;
             console.error('Request failed:', jqXHR.status, textStatus, errorThrown);
             statusLogDiv.textContent = 'Something went wrong while talking to the server.'
         });
-    };
+    }
 </script>
