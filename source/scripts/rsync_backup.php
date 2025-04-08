@@ -7,6 +7,9 @@ require_once dirname(__DIR__) ."/include/Logger.php";
 require_once dirname(__DIR__) ."/include/notifications/Notification.php";
 require_once dirname(__DIR__) ."/include/paths/Destination.php";
 require_once dirname(__DIR__) ."/include/paths/PathHelper.php";
+require_once dirname(__DIR__) ."/include/sync_list/RsyncOptions.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncEntry.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncList.php";
 
 use unraid\plugins\EasyRsync\BackupHelper;
 use unraid\plugins\EasyRsync\Destination;
@@ -16,6 +19,9 @@ use unraid\plugins\EasyRsync\Logger;
 use unraid\plugins\EasyRsync\Notification;
 use unraid\plugins\EasyRsync\NotificationLevel;
 use unraid\plugins\EasyRsync\PathHelper;
+use unraid\plugins\EasyRsync\SyncList;
+use unraid\plugins\EasyRsync\SyncEntry;
+use unraid\plugins\EasyRsync\RsyncOptions;
 
 $userConfig = ERSettings::getUserConfig();
 
@@ -76,59 +82,50 @@ if (!file_exists(ERSettings::getPathsJsonFilePath())) {
 }
 $logger->logDebug('Paths list file exists');
 
-// Parse paths
-$paths = ERSettings::getPaths();
+// Get user defined synclist
+$syncList = SyncList::fromFile();
 $logger->logInfo('Successfully parsed paths');
 
-// Ensure paths are present
-$sources = $paths['sources'];
-$logger->logDebug("'". implode(',', $sources) ."'");
-if (empty($sources)) {
-    $logger->logError('At least one source for backup is needed');
-    cleanup(failure: true);
-}
-$destinations = $paths['destinations'];
-$logger->logDebug("'". implode(',', $destinations) ."'");
-if (empty($destinations)) {
-    $logger->logError('At least one destination is needed');
-    cleanup(failure: true);
-}
+// Todo ensure no paths are empty
 
-//Summary map for storing final log/notifier messages for each source and or destination
-$syncSummary = array(array());
-foreach ($sources as $source) {
-    foreach ($destinations as $destination) {
-        $syncSummary[$source][$destination] = "Skipped";
-    }
-}
-
-$rsyncOptions = BackupHelper::buildRsyncOptions(doDryRun: $dryRunMode);
-$logger->logDebug($rsyncOptions);
-//Test all sources and destinations
-
-foreach ($sources as $source) {
-    foreach ($destinations as $destination) {
-        if (ERHelper::isAbortRequested()) {
-            handleAbortRequest();
-        }
-        // Construct and execute the rsync command.
-        $command = "rsync $rsyncOptions '$source' '$destination' --log-file='" . ERSettings::getRsyncLogFilePath() . "'";
-        $logger->logInfo("Current command: $command");
-        exec($command, $output, $return_var);
-
-        if ($return_var !== 0) {
-            $logger->logError("Failed to sync '$source' with '$destination'. Check Rsync Log.");
-
-            $syncSummary[$source][$destination] = "FAILED";
-        } else {
-            $logger->logInfo("Successfully synced '$source' with '$destination'.");
-
-            $syncSummary[$source][$destination] = "Success";
+$entryCount = count($syncList->entries);
+foreach ($syncList->entries as $index => $syncEntry) {
+    //Summary map for storing final log/notifier messages for each source and or destination
+    $syncSummary = array(array());
+    foreach ($syncEntry->sources as $source) {
+        foreach ($syncEntry->destinations as $destination) {
+            $syncSummary[$source][$destination] = "Skipped";
         }
     }
-}
-handleEnd();
 
+    //TODO change over to entry's rsync options
+    $rsyncOptions = BackupHelper::buildRsyncOptions(doDryRun: $dryRunMode);
+    $logger->logDebug($rsyncOptions);
+
+    foreach ($syncEntry->sources as $source) {
+        foreach ($syncEntry->destinations as $destination) {
+            if (ERHelper::isAbortRequested()) {
+                handleAbortRequest();
+            }
+
+            // Construct and execute the rsync command.
+            $command = "rsync $rsyncOptions '$source' '$destination' --log-file='" . ERSettings::getRsyncLogFilePath() . "'";
+            $logger->logInfo("Current command: $command");
+            exec($command, $output, $return_var);
+
+            if ($return_var !== 0) {
+                $logger->logError("Failed to sync '$source' with '$destination'. Check Rsync Log.");
+
+                $syncSummary[$source][$destination] = "FAILED";
+            } else {
+                $logger->logInfo("Successfully synced '$source' with '$destination'.");
+
+                $syncSummary[$source][$destination] = "Success";
+            }
+        }
+    }
+    handleEnd();
+}
 
 function handleAbortRequest(): never {
     global $logger;
@@ -176,7 +173,7 @@ function cleanup(bool $failure = false, Notification $notification = null): neve
 
     if ($failure) {
         $logger->logWarning("Something went wrong");
-        exit(1);
+        exit(1); //TODO remove because of multiple sync job sets
     } else {
         $logger->logInfo("Finished syncing");
         exit(0);
