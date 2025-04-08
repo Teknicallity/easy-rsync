@@ -37,6 +37,7 @@ $options = getopt($shortopts, $longopts);
 
 $dryRunMode = isset($options['n']) || isset($options['dry-run']);
 
+$useEmojis = true;
 
 $backupStartedTime = new DateTime();
 $logger->logDebug('Backup script called'. $backupStartedTime->format('c'));
@@ -88,13 +89,15 @@ $logger->logInfo('Successfully parsed paths');
 
 // Todo ensure no paths are empty
 
-$entryCount = count($syncList->entries);
+$allSyncSummaries = [];
+$hadFailure = false;
+
 foreach ($syncList->entries as $index => $syncEntry) {
+    $syncSummary = [];
     //Summary map for storing final log/notifier messages for each source and or destination
-    $syncSummary = array(array());
     foreach ($syncEntry->sources as $source) {
         foreach ($syncEntry->destinations as $destination) {
-            $syncSummary[$source][$destination] = "Skipped";
+            $syncSummary[$source][$destination] = $useEmojis ? "⏭️" : "Skipped:";
         }
     }
 
@@ -105,7 +108,7 @@ foreach ($syncList->entries as $index => $syncEntry) {
     foreach ($syncEntry->sources as $source) {
         foreach ($syncEntry->destinations as $destination) {
             if (ERHelper::isAbortRequested()) {
-                handleAbortRequest();
+                handleAbortRequest($allSyncSummaries);
             }
 
             // Construct and execute the rsync command.
@@ -115,90 +118,133 @@ foreach ($syncList->entries as $index => $syncEntry) {
 
             if ($return_var !== 0) {
                 $logger->logError("Failed to sync '$source' with '$destination'. Check Rsync Log.");
-
-                $syncSummary[$source][$destination] = "FAILED";
+                $syncSummary[$source][$destination] = $useEmojis ? "❌" : "Failure:";
+                $hadFailure = true;
             } else {
                 $logger->logInfo("Successfully synced '$source' with '$destination'.");
-
-                $syncSummary[$source][$destination] = "Success";
+                $syncSummary[$source][$destination] = $useEmojis ? "✅" : "Success:";
             }
         }
     }
-    handleEnd();
+    $allSyncSummaries[] = $syncSummary;
 }
+handleFinalSummary($allSyncSummaries, $hadFailure);
 
-function handleAbortRequest(): never {
+
+function handleAbortRequest(array $allSyncSummaries): never {
     global $logger;
+
+    $flatSummary = [];
+    foreach ($allSyncSummaries as $summary) {
+        $flatSummary = array_merge_recursive($flatSummary, $summary);
+    }
+
     $notification = new Notification(
         "Sync Aborted",
         "The sync operation was aborted by user",
+        message: getFinalNotificationPathsMessage($flatSummary),
         level: NotificationLevel::WARNING
     );
+    $notification->send();
+
     $logger->logWarning("Sync aborted");
-    // which sources were synced until which destinations?
-    cleanup(failure: true, notification: $notification);
+    cleanup(failure: true);
+    exit(1);
 }
 
-function handleEnd(): never {
-    global $logger;
+function handleFinalSummary(array $allSyncSummaries, bool $hadFailure): never {
+    global $logger, $backupStartedTime;
+
     $backupFinishedTime = new DateTime();
-    global $backupStartedTime;
     $backupTime = $backupStartedTime->diff($backupFinishedTime);
-    $backupDuration = $backupTime->format('%H:%I:%S');
+    $duration = $backupTime->format('%H:%I:%S');
 
-    $notification = new Notification("Sync Completed", "Completed in $backupDuration");
+    $flatSummary = [];
+    foreach ($allSyncSummaries as $summary) {
+        $flatSummary = array_merge_recursive($flatSummary, $summary);
+    }
 
-    $logger->logInfo("Finished syncing in $backupDuration");
-    cleanup(notification: $notification);
+    $notification = new Notification(
+        $hadFailure ? "Sync Completed with Errors" : "Sync Completed",
+        "Completed in $duration",
+        message: getFinalNotificationPathsMessage($flatSummary),
+        level: $hadFailure ? NotificationLevel::ALERT : NotificationLevel::NORMAL
+    );
+    $notification->send();
+
+    cleanup();
+    exit($hadFailure ? 1 : 0);
 }
 
-function cleanup(bool $failure = false, Notification $notification = null): never {
+function cleanup(bool $failure = false): void {
     global $logger;
-    global $syncSummary;
 
     $logger->logInfo("Cleaning up");
+
     if (file_exists(ERSettings::getStateRsyncAbortedFilePath())) {
         unlink(ERSettings::getStateRsyncAbortedFilePath());
         $logger->logDebug("Removed abort status file");
     }
-    unlink(ERSettings::getStateRsyncRunningFilePath());
-    $logger->logDebug("Remove running status file");
 
-    if (!empty($syncSummary)) {
-        $message = getNotificationPathsMessage($syncSummary);
-        $notification?->setMessage($message);
+    if (file_exists(ERSettings::getStateRsyncRunningFilePath())) {
+        unlink(ERSettings::getStateRsyncRunningFilePath());
+        $logger->logDebug("Removed running status file");
     }
 
-    $notification?->send();
-
-    if ($failure) {
-        $logger->logWarning("Something went wrong");
-        exit(1); //TODO remove because of multiple sync job sets
-    } else {
-        $logger->logInfo("Finished syncing");
-        exit(0);
-    }
+    $logger->logInfo("Cleanup complete");
 }
 
 /**
  * @param array $syncSummary
  * @return string
  */
-function getNotificationPathsMessage(array $syncSummary): string {
-    global $sources;
-    global $destinations;
+function getFinalNotificationPathsMessage(array $syncSummary): string {
+    global $syncList;
 
     $message = "";
-    foreach ($sources as $source) {
-        foreach ($destinations as $destination) {
-            $sourceParts = PathHelper::deconstructPath($source);
-            $destinationParts = new Destination($destination);
+    $count = count($syncList->entries);
+    foreach ($syncList->entries as $jobIndex => $syncEntry) {
+        $message .= "**Sync Job #" . ($jobIndex + 1) . "**\\n";
+        foreach ($syncEntry->sources as $source) {
+            $filteredSourcePath = shortenSourcePath($source);
 
-            $sourcePathEnd = $sourceParts[array_key_last($sourceParts)] ?? 'null';
-            $destinationHostPath = $destinationParts->host . ':' . $destinationParts->fullPath;
+            foreach ($syncEntry->destinations as $destination) {
+                $filteredDestination = shortenDestinationPath($destination);
 
-            $message .= $sourcePathEnd . ' -> ' . $destinationHostPath . ' ' . $syncSummary[$source][$destination] . "\n";
+                $message .= $syncSummary[$source][$destination] . ' ' .
+                    $filteredSourcePath . ' ->\\n⠀⠀' . // uses '⠀⠀' at end, not spaces
+                    $filteredDestination . "\\n";
+            }
         }
+        $message .= "\\n";
     }
     return $message;
+}
+
+function shortenSourcePath(string $source): string {
+    $maxLength = 26;
+    if (strlen($source) > $maxLength) {
+        $sourceParts = PathHelper::extractPathComponents($source);
+        $lastComponent = end($sourceParts);
+
+        if (strlen($lastComponent) > $maxLength) {
+            $sourcePathEnd = substr($lastComponent, 0, $maxLength - 3) . '...';
+        } else {
+            $sourcePathEnd = $lastComponent;
+        }
+    } else {
+        $sourcePathEnd = $source;
+    }
+    return $sourcePathEnd;
+}
+
+function shortenDestinationPath(string $destination): string {
+    $maxLength = 26;
+    $hostAndPath = (new Destination($destination))->hostAndPath();
+
+    if (strlen($hostAndPath) > $maxLength) {
+        return substr($hostAndPath, 0, $maxLength - 3) . '...';
+    }
+
+    return $hostAndPath;
 }
