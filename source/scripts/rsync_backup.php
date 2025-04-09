@@ -80,6 +80,7 @@ $logger->logDebug('Array is online');
 if (!file_exists(ERSettings::getPathsJsonFilePath())) {
     $logger->logError('Cannot find path list config file to read from.');
     cleanup(failure: true);
+    exit();
 }
 $logger->logDebug('Paths list file exists');
 
@@ -91,6 +92,13 @@ $logger->logInfo('Successfully parsed paths');
 
 $allSyncSummaries = [];
 $hadFailure = false;
+
+$notification = new Notification(
+    "Sync started",
+    "Sync started at " . $backupStartedTime->format("Y/m/d H:i:s"),
+    level: NotificationLevel::NORMAL
+);
+$notification->send();
 
 foreach ($syncList->entries as $index => $syncEntry) {
     $syncSummary = [];
