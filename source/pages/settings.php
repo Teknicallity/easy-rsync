@@ -59,12 +59,10 @@ if ($_POST) {
     $logger->logInfo("Saved user config");
 
     // Save sync job paths
-    $syncPathsNotNull = isset($_POST["sourceDirectories"]) && isset($_POST["destinationHosts"]);
-    if ($syncPathsNotNull) {
-        $logger->logDebug(print_r($_POST["sourceDirectories"], true));
-        $logger->logDebug(print_r($_POST["destinationHosts"], true));
+    if (isset($_POST["syncEntries"])) {
+        $logger->logDebug(print_r($_POST["syncEntries"], true));
 
-        $syncList = SyncList::fromFormData($_POST);
+        $syncList = SyncList::fromArray($_POST);
 
         $logger->logDebug("Got path results");
         try {
@@ -82,6 +80,12 @@ if ($_POST) {
 
 $userConfig = ERSettings::getUserConfig();
 $syncList = SyncList::fromFile();
+
+function bool_to_str($val): string {
+    if ($val === true) return "true";
+    if ($val === false) return "false";
+    return $val;
+}
 
 ?>
 <link type="text/css" rel="stylesheet" href="<?php autov('/webGui/styles/jquery.filetree.css') ?>">
@@ -103,8 +107,8 @@ $syncList = SyncList::fromFile();
     }
 
     .deleteSyncJobButton {
-        margin-top: 0;
-        margin-bottom: 0;
+        margin-top: 0 !important;
+        margin-bottom: 0 !important;
     }
 </style>
 
@@ -142,7 +146,7 @@ $syncList = SyncList::fromFile();
     <dl>
         <dt>Capture file datetimes</dt>
         <dd>
-            <select id="rsyncTimes" name="rsyncTimes" class="rsyncOption">
+            <select id="rsyncTimes" name="rsyncTimes" class="rsyncOption globalOption">
                 <?= mk_option($userConfig["rsyncTimes"], "false", "No") ?>
                 <?= mk_option($userConfig["rsyncTimes"], "true", "Yes") ?>
             </select>
@@ -155,7 +159,7 @@ $syncList = SyncList::fromFile();
     <dl>
         <dt>When to delete old files</dt>
         <dd>
-            <select id="rsyncDelete" name="rsyncDelete" class="rsyncOption">
+            <select id="rsyncDelete" name="rsyncDelete" class="rsyncOption globalOption">
                 <!-- <option value="after">After</option>
                 <option value="before">Before</option>
                 <option value="during">During</option>
@@ -174,7 +178,7 @@ $syncList = SyncList::fromFile();
     <dl>
         <dt>Compress backup</dt>
         <dd>
-            <select id="rsyncCompress" name="rsyncCompress" class="rsyncOption">
+            <select id="rsyncCompress" name="rsyncCompress" class="rsyncOption globalOption">
                 <?= mk_option($userConfig["rsyncCompress"], "false", "No") ?>
                 <?= mk_option($userConfig["rsyncCompress"], "true", "Yes") ?>
             </select>
@@ -187,8 +191,9 @@ $syncList = SyncList::fromFile();
     <dl>
         <dt>Custom Rsync Parameters</dt>
         <dd>
-            <input type="text" id="rsyncCustom" name="rsyncCustom" oninput="updateRsyncEntries();"
-                   value="<?= $userConfig["rsyncCustom"] ?>" placeholder="Will override other Rsync options">
+            <input type="text" id="rsyncCustom" name="rsyncCustom" oninput="updateGlobalRsyncOptions();"
+                   value="<?= $userConfig["rsyncCustom"] ?>" class="rsyncCustomParam globalOption"
+                   placeholder="Will override other Rsync options">
         </dd>
     </dl>
 
@@ -292,13 +297,12 @@ $syncList = SyncList::fromFile();
     </div>
     <div id="syncEntriesContainer">
         <?php foreach($syncList->entries as $index => $syncEntry) { ?>
-        <div class="sync-entry" data-index="<?= htmlspecialchars($index); ?>">
+        <div class="sync-entry" data-entry-id="<?= (int)$index ?>">
             <dl>
                 <dt>Local Directories</dt>
                 <dd>
                     <div style="display: table; width: 300px;">
-                        <textarea id="sourceDirectories_<?= htmlspecialchars($index); ?>"
-                                  name="sourceDirectories[]"
+                        <textarea name="syncEntries[<?= (int)$index; ?>][sources]"
                                   onfocus="$(this).next('.ft').slideDown('fast');"
                                   style="resize: vertical; width: 400px;"
                                   rows="3"><?= implode("\r\n", $syncEntry->sources) ?></textarea>
@@ -317,8 +321,7 @@ $syncList = SyncList::fromFile();
                 <dt>Destination Hosts</dt>
                 <dd>
                     <div style="display: table; width: 300px;">
-                        <textarea id="destinationHosts_<?= htmlspecialchars($index); ?>"
-                                  name="destinationHosts[]"
+                        <textarea name="syncEntries[<?= (int)$index; ?>][destinations]"
                                   onfocus="$(this).next('.ft').slideDown('fast');"
                                   style="resize: vertical; width: 400px;"
                                   rows="3"><?= implode("\r\n", $syncEntry->destinations) ."\r\n" ?></textarea>
@@ -332,6 +335,84 @@ $syncList = SyncList::fromFile();
                 <p>Any remote host destinations that files will be copied to</p>
                 <p>In the format: <code>[User@]Host:/Folder</code></p>
             </blockquote>
+
+            <dl>
+                <dt>Use Global Rsync Settings</dt>
+                <dd>
+                    <select name="syncEntries[<?= (int)$index; ?>][useDefaultRsync]"
+                            class="entryOption use-default-rsync"
+                            onchange="updateSyncEntryRsyncOptions(this.closest('.sync-entry')); expandOptionsBlock(this);">
+                        <?= mk_option(is_null($syncEntry->rsyncOptions) ? 'true' : 'false', 'false', "No") ?>
+                        <?= mk_option(is_null($syncEntry->rsyncOptions) ? 'true' : 'false', 'true', "Yes") ?>
+                    </select>
+                </dd>
+            </dl>
+            <blockquote class='inline_help entry-options-block'>
+                <dl>
+                    <dt>Capture file datetimes</dt>
+                    <dd>
+                        <select name="syncEntries[<?= (int)$index; ?>][rsyncOptions][rsyncTimes]"
+                                class="rsyncOption entryOption">
+                            <?php
+                            $selectedValue = bool_to_str($syncEntry->rsyncOptions?->rsyncTimes ?? $userConfig["rsyncTimes"]);
+                            echo mk_option($selectedValue, "false", "No");
+                            echo mk_option($selectedValue, "true", "Yes");
+                            ?>
+                        </select>
+                    </dd>
+                </dl>
+                <blockquote class="inline_help">
+
+                </blockquote>
+
+                <dl>
+                    <dt>When to delete old files</dt>
+                    <dd>
+                        <select name="syncEntries[<?= (int)$index; ?>][rsyncOptions][rsyncDelete]"
+                                class="rsyncOption entryOption">
+                            <?php
+                            $selectedValue = $syncEntry->rsyncOptions?->rsyncDelete ?? $userConfig["rsyncDelete"];
+                            echo mk_option($selectedValue, "after", "After");
+                            echo mk_option($selectedValue, "before", "Before");
+                            echo mk_option($selectedValue, "during", "During");
+                            echo mk_option($selectedValue, "delay", "Delay");
+                            ?>
+                        </select>
+                    </dd>
+                </dl>
+                <blockquote class="inline_help">
+                    Look up rsync delete-after
+                </blockquote>
+
+                <dl>
+                    <dt>Compress backup</dt>
+                    <dd>
+                        <select name="syncEntries[<?= (int)$index; ?>][rsyncOptions][rsyncCompress]"
+                                class="rsyncOption entryOption">
+                            <?php
+                            $selectedValue = bool_to_str($syncEntry->rsyncOptions?->rsyncCompress ?? $userConfig["rsyncCompress"]);
+                            echo mk_option($selectedValue, "false", "No");
+                            echo mk_option($selectedValue, "true", "Yes");
+                            ?>
+                        </select>
+                    </dd>
+                </dl>
+                <blockquote class="inline_help">
+
+                </blockquote>
+
+                <dl>
+                    <dt>Custom Rsync Parameters</dt>
+                    <dd>
+                        <input type="text" name="syncEntries[<?= (int)$index; ?>][rsyncOptions][rsyncCustom]"
+                               class="rsyncCustomParam entryOption"
+                               oninput="updateSyncEntryRsyncOptions(this.closest('.sync-entry'));"
+                               value="<?= $syncEntry->rsyncOptions?->rsyncCustom ?? $userConfig["rsyncCustom"] ?>"
+                               placeholder="Will override other Rsync options">
+                    </dd>
+                </dl>
+            </blockquote>
+
             <dl>
                 <dt>&nbsp;</dt>
                 <dd>
@@ -429,7 +510,7 @@ $syncList = SyncList::fromFile();
 
             let syncEntryIndex = <?= count($syncList->entries) ?>;
 
-            const newSyncEntry = `
+            const xnewSyncEntry = `
             <div class="sync-entry" data-index="${syncEntryIndex}">
                 <dl>
                     <dt>Local Directories</dt>
@@ -470,7 +551,130 @@ $syncList = SyncList::fromFile();
             </div>
             `;
 
-            $('#syncEntriesContainer').append(newSyncEntry);
+            const newSyncEntry =`
+            <div class="sync-entry" data-entry-id="${syncEntryIndex}">
+                <dl>
+                    <dt>Local Directories</dt>
+                    <dd>
+                        <div style="display: table; width: 300px;">
+                            <textarea name="syncEntries[${syncEntryIndex}][sources]"
+                                      onfocus="$(this).next('.ft').slideDown('fast');"
+                                      style="resize: vertical; width: 400px;"
+                                      rows="3"></textarea>
+                            <div class="ft" style="display: none;">
+                                <div class="fileTreeDiv"></div>
+                                <button onclick="addSelectionToList(this);  return false;">Add to sources</button>
+                            </div>
+                        </div>
+                    </dd>
+                </dl>
+                <blockquote class='inline_help'>
+                    <p>Any local directories that should be backed up</p>
+                </blockquote>
+
+                <dl>
+                    <dt>Destination Hosts</dt>
+                    <dd>
+                        <div style="display: table; width: 300px;">
+                            <textarea name="syncEntries[${syncEntryIndex}][destinations]"
+                                      onfocus="$(this).next('.ft').slideDown('fast');"
+                                      style="resize: vertical; width: 400px;"
+                                      rows="3"></textarea>
+                            <!-- <div class="ft" style="display: none;">
+                                <button onclick="">Add to hosts</button>
+                            </div> -->
+                        </div>
+                    </dd>
+                </dl>
+                <blockquote class='inline_help'>
+                    <p>Any remote host destinations that files will be copied to</p>
+                    <p>In the format: <code>[User@]Host:/Folder</code></p>
+                </blockquote>
+
+                <dl>
+                    <dt>Use Global Rsync Settings</dt>
+                    <dd>
+                        <select name="syncEntries[${syncEntryIndex}][useDefaultRsync]"
+                                class="entryOption use-default-rsync"
+                                onchange="updateSyncEntryRsyncOptions(this.closest('.sync-entry')); expandOptionsBlock(this);">
+                            <option value="false">No</option>
+                            <option value="true" selected="">Yes</option>
+                        </select>
+                    </dd>
+                </dl>
+                <blockquote class='inline_help entry-options-block'>
+                    <dl>
+                        <dt>Capture file datetimes</dt>
+                        <dd>
+                            <select name="syncEntries[${syncEntryIndex}][rsyncOptions][rsyncTimes]"
+                                    class="rsyncOption entryOption">
+                                <?php
+                echo mk_option($userConfig["rsyncTimes"], "false", "No");
+                echo mk_option($userConfig["rsyncTimes"], "true", "Yes");
+                ?>
+                            </select>
+                        </dd>
+                    </dl>
+                    <blockquote class="inline_help">
+
+                    </blockquote>
+
+                    <dl>
+                        <dt>When to delete old files</dt>
+                        <dd>
+                            <select name="syncEntries[${syncEntryIndex}][rsyncOptions][rsyncDelete]"
+                                    class="rsyncOption entryOption">
+                                <?php
+                echo mk_option($userConfig["rsyncDelete"], "after", "After");
+                echo mk_option($userConfig["rsyncDelete"], "before", "Before");
+                echo mk_option($userConfig["rsyncDelete"], "during", "During");
+                echo mk_option($userConfig["rsyncDelete"], "delay", "Delay");
+                ?>
+                            </select>
+                        </dd>
+                    </dl>
+                    <blockquote class="inline_help">
+                        Look up rsync delete-after
+                    </blockquote>
+
+                    <dl>
+                        <dt>Compress backup</dt>
+                        <dd>
+                            <select name="syncEntries[${syncEntryIndex}][rsyncOptions][rsyncCompress]"
+                                    class="rsyncOption entryOption">
+                                <?php
+                echo mk_option($userConfig["rsyncCompress"], "false", "No");
+                echo mk_option($userConfig["rsyncCompress"], "true", "Yes");
+                ?>
+                            </select>
+                        </dd>
+                    </dl>
+                    <blockquote class="inline_help">
+
+                    </blockquote>
+
+                    <dl>
+                        <dt>Custom Rsync Parameters</dt>
+                        <dd>
+                            <input type="text" name="syncEntries[${syncEntryIndex}][rsyncOptions][rsyncCustom]"
+                                   class="rsyncCustomParam entryOption"
+                                   oninput="updateSyncEntryRsyncOptions(this.closest('.sync-entry'));"
+                                   value="<?= $userConfig["rsyncCustom"] ?>"
+                                   placeholder="Will override other Rsync options">
+                        </dd>
+                    </dl>
+                </blockquote>
+
+                <dl>
+                    <dt>&nbsp;</dt>
+                    <dd>
+                        <button type="button" class="deleteSyncJobButton" onclick="removeSyncEntry(this)">Remove</button>
+                    </dd>
+                </dl>
+            </div>
+            `;
+
+                $('#syncEntriesContainer').append(newSyncEntry);
 
             // Reinitialize the file tree functionality for the new textarea
             $('#sourceDirectories_' + syncEntryIndex).next('.ft').find('.fileTreeDiv').fileTree({
@@ -487,7 +691,10 @@ $syncList = SyncList::fromFile();
         });
 
         updateCronEntries();
-        updateRsyncEntries();
+        updateGlobalRsyncOptions();
+        $('.sync-entry').each(function () {
+            updateSyncEntryRsyncOptions(this); // Process each entry individually
+        });
     });
 
     function addSelectionToList(element) {
@@ -515,6 +722,25 @@ $syncList = SyncList::fromFile();
         });
     }
 
+    function updateSyncEntryRsyncOptions(entry) {
+        const useDefault = $(entry).find('.use-default-rsync').val() === 'true';
+        const useCustom = $(entry).find('.rsyncCustomParam').val().trim() !== '';
+
+        $(entry).find('.entry-options-block :input').prop('disabled', useDefault);
+
+        if (!useDefault) {
+            $(entry).find('.rsyncOption.entryOption').prop('disabled', useCustom);
+        }
+    }
+
+    function expandOptionsBlock(useDefaultElement) {
+        const entryOptionsBlockquote = $(useDefaultElement).closest('.sync-entry').find('blockquote.entry-options-block');
+
+        if ($(useDefaultElement).val() !== 'true' && entryOptionsBlockquote.css('display') === 'none') {
+            $(useDefaultElement).parent().prev().trigger('click');
+        }
+    }
+
     function updateCronEntries() {
         $('#frequencyWeekday, #frequencyDayOfMonth, #frequencyHour, #frequencyMinute, #frequencyCustom').prop('disabled', true);
         switch ($('#backupFrequency').val()) {
@@ -535,13 +761,13 @@ $syncList = SyncList::fromFile();
         }
     }
 
-    function updateRsyncEntries() {
-        let hasText = $('#rsyncCustom').val().trim().length > 0;
+    function updateGlobalRsyncOptions() {
+        let hasText = $('#rsyncCustom.globalOption').val().trim().length > 0;
 
         if (hasText) {
-            $('.rsyncOption').prop('disabled', true);
+            $('.rsyncOption.globalOption').prop('disabled', true);
         } else {
-            $('.rsyncOption').prop('disabled', false);
+            $('.rsyncOption.globalOption').prop('disabled', false);
         }
     }
 
