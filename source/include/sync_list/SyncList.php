@@ -29,44 +29,7 @@ class SyncList {
             $fileContents = json_decode(file_get_contents($filePath), true);
         }
 
-        $syncEntries = self::getSyncEntriesFromJson($fileContents);
-        return new SyncList($syncEntries);
-    }
-
-    public static function fromFormData(array $formData): SyncList {
-        if (!isset($formData['sourceDirectories'], $formData['destinationHosts'])) {
-            throw new InvalidArgumentException("Missing required fields in form data.");
-        }
-
-        $sourceDirs = $formData['sourceDirectories'];
-        $destHosts = $formData['destinationHosts'];
-
-        if (count($sourceDirs) !== count($destHosts)) {
-            throw new InvalidArgumentException("Source directories and destination hosts must have the same length.");
-        }
-
-        $syncEntries = [];
-
-        for ($i = 0; $i < count($sourceDirs); $i++) {
-            $rawSources = trim($sourceDirs[$i]);
-            $rawDestinations = trim($destHosts[$i]);
-
-            if (empty($rawSources) || empty($rawDestinations)) {
-                continue;
-            }
-
-            $sources = preg_split("/\r\n|\n|\r/", $rawSources);
-            $destinations = preg_split("/\r\n|\n|\r/", $rawDestinations);
-
-            $entry = new SyncEntry(
-                $sources,
-                $destinations,
-                null
-            );
-            $syncEntries[] = $entry;
-        }
-
-        return new SyncList($syncEntries);
+        return self::fromArray($fileContents);
     }
 
     /**
@@ -82,7 +45,7 @@ class SyncList {
         }
 
         $filePath = ERSettings::getPathsJsonFilePath();
-        $output = ['syncList' => $this->entries];
+        $output = ['syncEntries' => $this->entries];
 
         $success = file_put_contents(
             $filePath,
@@ -94,14 +57,14 @@ class SyncList {
         }
     }
 
-    private static function getSyncEntriesFromJson(mixed $json): array {
-        $jsonSyncList = isset($json['syncList']) ? (array)$json['syncList'] : [];
+    public static function fromArray(mixed $json): SyncList {
+        $jsonSyncList = isset($json['syncEntries']) ? (array)$json['syncEntries'] : [];
 
         $syncEntries = [];
         foreach ($jsonSyncList as $jsonEntry) {
-            $syncEntries[] = SyncEntry::fromJson($jsonEntry);
+            $syncEntries[] = SyncEntry::fromArray($jsonEntry);
         }
 
-        return $syncEntries;
+        return new SyncList($syncEntries);
     }
 }

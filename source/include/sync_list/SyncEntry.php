@@ -26,12 +26,20 @@ class SyncEntry {
         $this->rsyncOptions = $rsyncOptions;
     }
 
-    public static function fromJson(mixed $json): SyncEntry {
-        $sources = (array)$json['sources'] ?? [];
-        $destinations = (array)$json['destinations'] ?? [];
-        $rsyncOptionsJson = $json['rsyncOptions'] ?? null;
+    public static function fromArray(mixed $data): SyncEntry {
+        $sourcesRaw = $data['sources'] ?? [];
+        $destinationsRaw = $data['destinations'] ?? [];
 
-        $rsyncOptions = !is_null($rsyncOptionsJson) ? RsyncOptions::fromJson($rsyncOptionsJson) : null;
+        $sources = is_string($sourcesRaw)
+            ? array_filter(array_map('trim', preg_split("/\r\n|\n|\r/", $sourcesRaw)))
+            : (array)$sourcesRaw;
+
+        $destinations = is_string($destinationsRaw)
+            ? array_filter(array_map('trim', preg_split("/\r\n|\n|\r/", $destinationsRaw)))
+            : (array)$destinationsRaw;
+
+        $rsyncOptionsJson = $data['rsyncOptions'] ?? null;
+        $rsyncOptions = !is_null($rsyncOptionsJson) ? RsyncOptions::fromArray($rsyncOptionsJson) : null;
 
         return new SyncEntry(
             sources: $sources,

@@ -32,16 +32,16 @@ class RsyncOptions {
         $this->rsyncCustom = $rsyncCustom;
     }
 
-    public static function fromJson(mixed $json): RsyncOptions {
+    public static function fromArray(mixed $data): RsyncOptions {
         return new self(
-            rsyncRecursive: (bool)($json['rsyncRecursive'] ?? true),
-            rsyncTimes: (bool)($json['rsyncTimes'] ?? true),
-            rsyncVerbose: (bool)($json['rsyncVerbose'] ?? true),
-            rsyncHumanReadable: (bool)($json['rsyncHumanReadable'] ?? true),
-            rsyncDelete: $json['rsyncDelete'] ?: "after",
-            rsyncRemoteShell: $json['rsyncRemoteShell'] ?: "ssh",
-            rsyncCompress: (bool)($json['rsyncCompress'] ?? true),
-            rsyncCustom: $json['rsyncCustom'] ?: ""
+            rsyncRecursive: filter_var($data['rsyncRecursive'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            rsyncTimes: filter_var($data['rsyncTimes'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            rsyncVerbose: filter_var($data['rsyncVerbose'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            rsyncHumanReadable: filter_var($data['rsyncHumanReadable'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            rsyncDelete: $data['rsyncDelete'] ?? "after",
+            rsyncRemoteShell: $data['rsyncRemoteShell'] ?? "ssh",
+            rsyncCompress: filter_var($data['rsyncCompress'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            rsyncCustom: $data['rsyncCustom'] ?? ""
         );
     }
 }
