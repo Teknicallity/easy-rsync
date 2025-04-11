@@ -6,6 +6,7 @@ use Exception;
 use InvalidArgumentException;
 
 require_once dirname(__DIR__) . "/ERSettings.php";
+require_once dirname(__DIR__) . "/FileUtils.php";
 require_once __DIR__ . "/SyncEntry.php";
 require_once __DIR__ . "/RsyncOptions.php";
 require_once dirname(__DIR__) . "/paths/Destination.php";
@@ -24,10 +25,7 @@ class SyncList {
         $filePath = ERSettings::getPathsJsonFilePath();
 //        $filePath = ERSettings::$configDir . '/' . $filename;
 
-        $fileContents = null;
-        if (file_exists($filePath)) {
-            $fileContents = json_decode(file_get_contents($filePath), true);
-        }
+        $fileContents = FileUtils::readJsonFile($filePath);
 
         return self::fromArray($fileContents);
     }
@@ -40,29 +38,27 @@ class SyncList {
             return;
         }
 
-        if (empty($this->entries["sources"] || empty($this->entries["destinations"]))) {
-            return;
-        }
-
         $filePath = ERSettings::getPathsJsonFilePath();
         $output = ['syncEntries' => $this->entries];
 
-        $success = file_put_contents(
-            $filePath,
-            json_encode($output, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)
-        );
-
-        if (!$success) {
-            throw new Exception("Could not save file");
-        }
+        FileUtils::writeJsonFile($filePath, $output);
     }
 
     public static function fromArray(mixed $json): SyncList {
         $jsonSyncList = isset($json['syncEntries']) ? (array)$json['syncEntries'] : [];
 
         $syncEntries = [];
-        foreach ($jsonSyncList as $jsonEntry) {
-            $syncEntries[] = SyncEntry::fromArray($jsonEntry);
+        foreach ($jsonSyncList as $index => $jsonEntry) {
+            if (!is_array($jsonEntry)) {
+                // You can log or throw depending on how strict you want to be
+                throw new \UnexpectedValueException("Entry at index $index is not a valid array");
+            }
+
+            try {
+                $syncEntries[] = SyncEntry::fromArray($jsonEntry);
+            } catch (\Throwable $e) {
+                throw new \RuntimeException("Invalid sync entry at index $index: " . $e->getMessage(), 0, $e);
+            }
         }
 
         return new SyncList($syncEntries);
