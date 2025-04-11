@@ -6,9 +6,9 @@ use unraid\plugins\EasyRsync\ERSettings;
 use unraid\plugins\EasyRsync\RsyncOptions;
 
 class SyncEntry {
-    public array $sources;
-    public array $destinations;
-    public ?RsyncOptions $rsyncOptions;
+    public array $sources = [];
+    public array $destinations = [];
+    public ?RsyncOptions $rsyncOptions = null;
 
     public function __construct(
         array $sources = [],
@@ -30,13 +30,9 @@ class SyncEntry {
         $sourcesRaw = $data['sources'] ?? [];
         $destinationsRaw = $data['destinations'] ?? [];
 
-        $sources = is_string($sourcesRaw)
-            ? array_filter(array_map('trim', preg_split("/\r\n|\n|\r/", $sourcesRaw)))
-            : (array)$sourcesRaw;
+        $sources = self::normalizePathList($sourcesRaw);
 
-        $destinations = is_string($destinationsRaw)
-            ? array_filter(array_map('trim', preg_split("/\r\n|\n|\r/", $destinationsRaw)))
-            : (array)$destinationsRaw;
+        $destinations = self::normalizePathList($destinationsRaw);
 
         $rsyncOptionsJson = $data['rsyncOptions'] ?? null;
         $rsyncOptions = !is_null($rsyncOptionsJson) ? RsyncOptions::fromArray($rsyncOptionsJson) : null;
@@ -46,5 +42,12 @@ class SyncEntry {
             destinations: $destinations,
             rsyncOptions: $rsyncOptions
         );
+    }
+
+    private static function normalizePathList(string|array $input): array {
+        if (is_string($input)) {
+            return array_filter(array_map('trim', preg_split("/\r\n|\n|\r/", $input)));
+        }
+        return $input;
     }
 }
