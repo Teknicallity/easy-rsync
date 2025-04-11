@@ -44,4 +44,56 @@ class RsyncOptions {
             rsyncCustom: $data['rsyncCustom'] ?? ""
         );
     }
+
+    public function buildRsyncArgumentsString(bool $doDryRun = false): string {
+        if (!empty($this->rsyncCustom)) {
+            $options = $this->rsyncCustom;
+
+            if ($doDryRun && !str_contains($options, '--dry-run')) {
+                $options .= ' --dry-run';
+            }
+
+            return trim($options);
+        }
+
+        $options = "";
+
+        if ($this->rsyncRecursive) {
+            $options .= ' --recursive';
+        }
+        if ($this->rsyncTimes) {
+            $options .= ' --times';
+        }
+        if ($this->rsyncVerbose) {
+            $options .= ' --verbose';
+        }
+        if ($this->rsyncHumanReadable) {
+            $options .= ' --human-readable';
+        }
+
+        switch ($this->rsyncDelete) {
+            case 'after':
+                $options .= ' --delete-after';
+                break;
+            case 'before':
+                $options .= ' --delete-before';
+                break;
+            case 'during':
+                $options .= ' --delete-during';
+                break;
+            case 'delay':
+                $options .= ' --delete-delay';
+                break;
+        }
+
+        if ($this->rsyncCompress) {
+            $options .= ' --compress';
+        }
+
+        if ($doDryRun) {
+            $options .= ' --dry-run';
+        }
+
+        return trim($options);
+    }
 }
