@@ -25,7 +25,7 @@ try {
 if ($_POST) {
     $userConfig = ERSettings::getUserConfig();
 
-    $logger = new Logger(loglevelString: $userConfig["logLevel"]);
+    $logger = Logger::getLogger(loglevelString: $userConfig["logLevel"]);
 
 //    ob_start();
 //    var_dump($_POST);
@@ -46,7 +46,7 @@ if ($_POST) {
     foreach ($currentConfig as $key => $value){
         if(isset($_POST[$key])){
             $currentConfig[$key] = $_POST[$key];
-            $logger->logDebug("Key: $key, Old: $value, New: ". $_POST[$key]);
+            $logger->debug("Key: $key, Old: $value, New: ". $_POST[$key]);
         }
     }
 
@@ -54,22 +54,22 @@ if ($_POST) {
     try {
         $output = ERSettings::saveUserConfig($currentConfig);
     } catch (Exception $e) {
-        $logger->logError("Could not save user config". $e->getMessage());
+        $logger->error("Could not save user config". $e->getMessage());
     }
-    $logger->logInfo("Saved user config");
+    $logger->info("Saved user config");
 
     // Save sync job paths
     if (isset($_POST["syncEntries"])) {
-        $logger->logDebug(print_r($_POST["syncEntries"], true));
+        $logger->debug(print_r($_POST["syncEntries"], true));
 
         $syncList = SyncList::fromArray($_POST);
 
-        $logger->logDebug("Got path results");
+        $logger->debug("Got path results");
         try {
             $syncList->saveToFile();
-            $logger->logInfo("Saved backup paths result");
+            $logger->info("Saved backup paths result");
         } catch (Exception $e) {
-            $logger->logError("Could not save paths". $e->getMessage());
+            $logger->error("Could not save paths". $e->getMessage());
         }
     }
 }

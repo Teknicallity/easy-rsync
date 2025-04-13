@@ -13,9 +13,10 @@ enum LogLevel: int {
 }
 
 class Logger {
+    private static ?Logger $instance = null;
     private LogLevel $logLevel;
 
-    public function __construct(LogLevel $logLevel = LogLevel::INFO, String $loglevelString = null) {
+    private function __construct(LogLevel $logLevel = LogLevel::INFO, ?string $loglevelString = null) {
         $this->logLevel = $logLevel;
 
         if ($loglevelString !== null) {
@@ -26,28 +27,38 @@ class Logger {
                 default => LogLevel::INFO,
             };
         }
-
     }
 
-    public function logDebug(string $message): void {
+    public static function getLogger(LogLevel $logLevel = LogLevel::INFO, ?string $loglevelString = null): Logger {
+        if (self::$instance === null) {
+            self::$instance = new Logger($logLevel, $loglevelString);
+        }
+        return self::$instance;
+    }
+
+    public static function resetInstance(): void {
+        self::$instance = null;
+    }
+
+    public function debug(string $message): void {
         if ($this->logLevel->value <= LogLevel::DEBUG->value) {
             LogHandler::writeToPluginLog("[Debug] " . $message);
         }
     }
 
-    public function logInfo(string $message): void {
+    public function info(string $message): void {
         if ($this->logLevel->value <= LogLevel::INFO->value) {
             LogHandler::writeToPluginLog("[Info] " . $message);
         }
     }
 
-    public function logWarning(string $message): void {
+    public function warning(string $message): void {
         if ($this->logLevel->value <= LogLevel::WARNING->value) {
             LogHandler::writeToPluginLog("[Warning] " . $message);
         }
     }
 
-    public function logError(string $message): void {
+    public function error(string $message): void {
         if ($this->logLevel->value <= LogLevel::ERROR->value) {
             LogHandler::writeToPluginLog("[Error] " . $message);
         }
