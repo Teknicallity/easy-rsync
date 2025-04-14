@@ -33,7 +33,11 @@ class Logger {
         if (self::$instance === null) {
             $userConfig = ERSettings::getUserConfig();
             self::$instance = new Logger(loglevelString: $userConfig["logLevel"]);
-            unset($userConfig);
+
+            $directory = ERSettings::$tempFolder;
+            if (!is_dir($directory)) {
+                mkdir($directory, 0755, true);
+            }
         }
         return self::$instance;
     }
