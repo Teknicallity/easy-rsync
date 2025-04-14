@@ -2,11 +2,7 @@
 
 namespace unraid\plugins\EasyRsync;
 
-require_once dirname(__DIR__) . "/ERSettings.php";
-require_once dirname(__DIR__) . "/ERHelper.php";
-require_once __DIR__ . "/RsyncOptions.php";
-require_once __DIR__ . "/SyncResult.php";
-require_once __DIR__ . "/SyncStatus.php";
+require_once dirname(__DIR__) . "/loader.php";
 
 use Exception;
 use unraid\plugins\EasyRsync\Exceptions\RsyncFailureException;

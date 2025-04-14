@@ -5,14 +5,7 @@ namespace unraid\plugins\EasyRsync;
 use Exception;
 use InvalidArgumentException;
 
-require_once dirname(__DIR__) . "/ERSettings.php";
-require_once dirname(__DIR__) . "/FileUtils.php";
-require_once dirname(__DIR__) . "/ERHelper.php";
-require_once __DIR__ . "/RsyncOptions.php";
-require_once __DIR__ . "/SyncEntry.php";
-require_once __DIR__ . "/SyncResult.php";
-require_once __DIR__ . "/SyncStatus.php";
-require_once dirname(__DIR__) . "/paths/Destination.php";
+require_once dirname(__DIR__) . "/loader.php";
 
 $logger = Logger::getLogger();
 

@@ -4,10 +4,7 @@ namespace unraid\plugins\EasyRsync;
 
 use Exception;
 
-require_once dirname(__DIR__) ."/include/ERSettings.php";
-require_once dirname(__DIR__) ."/include/Logger.php";
-require_once dirname(__DIR__) ."/include/sync_list/SyncList.php";
-require_once dirname(__DIR__) ."/include/sync_list/SyncEntry.php";
+require_once dirname(__DIR__) . "/include/loader.php";
 require_once "/usr/local/emhttp/plugins/dynamix/include/Helpers.php"; //mk_option
 
 /*

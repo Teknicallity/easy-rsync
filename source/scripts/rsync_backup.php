@@ -2,20 +2,7 @@
 
 namespace unraid\plugins\EasyRsync;
 
-require_once dirname(__DIR__) ."/include/BackupHelper.php";
-require_once dirname(__DIR__) ."/include/ERHelper.php";
-require_once dirname(__DIR__) ."/include/ERSettings.php";
-require_once dirname(__DIR__) ."/include/Logger.php";
-require_once dirname(__DIR__) ."/include/notifications/Notification.php";
-require_once dirname(__DIR__) ."/include/notifications/NotificationLevel.php";
-require_once dirname(__DIR__) ."/include/paths/Destination.php";
-require_once dirname(__DIR__) ."/include/paths/PathHelper.php";
-require_once dirname(__DIR__) ."/include/sync_list/RsyncOptions.php";
-require_once dirname(__DIR__) ."/include/sync_list/SyncEntry.php";
-require_once dirname(__DIR__) ."/include/sync_list/SyncList.php";
-require_once dirname(__DIR__) ."/include/sync_list/SyncResult.php";
-require_once dirname(__DIR__) ."/include/sync_list/SyncStatus.php";
-require_once dirname(__DIR__) ."/include/syncer/RsyncSyncer.php";
+require_once dirname(__DIR__) ."/include/loader.php";
 
 use DateTime;
 
