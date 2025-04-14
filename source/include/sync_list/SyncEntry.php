@@ -49,12 +49,7 @@ class SyncEntry {
         $destinations = self::normalizePathList($destinationsRaw);
 
         $rsyncOptionsJson = $data['rsyncOptions'] ?? null;
-        if ($rsyncOptionsJson !== null) {
-            $rsyncOptions = RsyncOptions::fromArray($rsyncOptionsJson);
-        } else {
-            $userConfig = ERSettings::getUserConfig();
-            $rsyncOptions = RsyncOptions::fromArray($userConfig);
-        }
+        $rsyncOptions = $rsyncOptionsJson !== null ? RsyncOptions::fromArray($rsyncOptionsJson) : null;
 
         return new SyncEntry(
             sources: $sources,
@@ -73,7 +68,13 @@ class SyncEntry {
     public function sync(callable $isAborted, bool $dryRunMode): SyncStatus {
         $this->results = [];
         $pairs = $this->generatePairs();
-        $rsyncOptionsStr = $this->rsyncOptions->buildRsyncArgumentsString(doDryRun: $dryRunMode);
+        if ($this->rsyncOptions === null) {
+            $userConfig = ERSettings::getUserConfig();
+            $rsyncOptions = RsyncOptions::fromArray($userConfig);
+            $rsyncOptionsStr = $rsyncOptions->buildRsyncArgumentsString(doDryRun: $dryRunMode);
+        } else {
+            $rsyncOptionsStr = $this->rsyncOptions->buildRsyncArgumentsString(doDryRun: $dryRunMode);
+        }
         self::$logger->debug("Built rsync options: $rsyncOptionsStr");
 
         foreach ($pairs as $index => $pair) {
