@@ -24,6 +24,7 @@ class SyncList {
     public array $entries = [];
     private bool $abortRequested = false;
     public ?SyncStatus $finalStatus = null;
+    public ?Syncer $syncer = null;
 
     private function __construct(array $entries) {
         self::$logger = Logger::getLogger();
@@ -73,12 +74,20 @@ class SyncList {
         return new SyncList($syncEntries);
     }
 
+    /**
+     * @throws Exception
+     */
     public function syncAll(bool $doDryRun): void {
+        if ($this->syncer === null) {
+            throw new Exception("Syncer not set");
+        }
+
         $this->abortRequested = false;
         $this->finalStatus = null;
 
         foreach ($this->entries as $entry) {
 //            if ($this->abortRequested) break;
+            $entry->syncer = $this->syncer;
             $outcome = $entry->sync(fn() => $this->checkAbortStatus(), $doDryRun);
 
             if ($outcome->isWorseThan($this->finalStatus)) {

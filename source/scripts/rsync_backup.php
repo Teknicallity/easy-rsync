@@ -1,5 +1,7 @@
 <?php
 
+namespace unraid\plugins\EasyRsync;
+
 require_once dirname(__DIR__) ."/include/BackupHelper.php";
 require_once dirname(__DIR__) ."/include/ERHelper.php";
 require_once dirname(__DIR__) ."/include/ERSettings.php";
@@ -13,19 +15,9 @@ require_once dirname(__DIR__) ."/include/sync_list/SyncEntry.php";
 require_once dirname(__DIR__) ."/include/sync_list/SyncList.php";
 require_once dirname(__DIR__) ."/include/sync_list/SyncResult.php";
 require_once dirname(__DIR__) ."/include/sync_list/SyncStatus.php";
+require_once dirname(__DIR__) ."/include/syncer/RsyncSyncer.php";
 
-use unraid\plugins\EasyRsync\BackupHelper;
-use unraid\plugins\EasyRsync\Destination;
-use unraid\plugins\EasyRsync\ERHelper;
-use unraid\plugins\EasyRsync\ERSettings;
-use unraid\plugins\EasyRsync\Logger;
-use unraid\plugins\EasyRsync\Notification;
-use unraid\plugins\EasyRsync\NotificationLevel;
-use unraid\plugins\EasyRsync\PathHelper;
-use unraid\plugins\EasyRsync\SyncList;
-use unraid\plugins\EasyRsync\SyncStatus;
-use unraid\plugins\EasyRsync\SyncEntry;
-use unraid\plugins\EasyRsync\RsyncOptions;
+use DateTime;
 
 $userConfig = ERSettings::getUserConfig();
 
@@ -101,6 +93,7 @@ $notification = new Notification(
 );
 $notification->send();
 
+$syncList->syncer = new RsyncSyncer();
 $syncList->syncAll(doDryRun: $dryRunMode);
 
 handleFinalSummary($syncList, $useEmojis);

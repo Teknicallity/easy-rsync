@@ -8,6 +8,7 @@ require_once __DIR__ . "/RsyncOptions.php";
 require_once __DIR__ . "/SyncResult.php";
 require_once __DIR__ . "/SyncStatus.php";
 
+use Exception;
 use unraid\plugins\EasyRsync\Exceptions\RsyncFailureException;
 
 //$logger = Logger::getLogger();
@@ -22,6 +23,7 @@ class SyncEntry {
      */
     public array $results = [];
     public ?SyncStatus $finalStatus = null;
+    public ?Syncer $syncer = null;
 
     public function __construct(
         array $sources = [],
@@ -65,7 +67,14 @@ class SyncEntry {
         return $input;
     }
 
+    /**
+     * @throws Exception
+     */
     public function sync(callable $isAborted, bool $dryRunMode): SyncStatus {
+        if ($this->syncer === null) {
+            throw new Exception("Syncer not set");
+        }
+
         $this->results = [];
         $pairs = $this->generatePairs();
         if ($this->rsyncOptions === null) {
@@ -96,9 +105,9 @@ class SyncEntry {
 
             try {
                 self::$logger->info("Syncing '" . $pair['source'] . "' to '" . $pair['destination'] . "'");
-                $this->performSync($pair['source'], $pair['destination'], $rsyncOptionsStr);
+                $this->syncer->performSync($pair['source'], $pair['destination'], $rsyncOptionsStr);
                 $status = SyncStatus::Success;
-            } catch (RsyncFailureException|\Exception $e) {
+            } catch (RsyncFailureException|Exception $e) {
                 $status = SyncStatus::Failed;
                 $error = $e->getMessage();
                 self::$logger->error("Failed to sync '" . $pair['source'] . " with " . $pair['destination'] . "' Check Rsync Log.");
@@ -128,18 +137,5 @@ class SyncEntry {
             }
         }
         return $pairs;
-    }
-
-    /**
-     * @throws RsyncFailureException
-     */
-    private function performSync(string $source, string $destination, string $rsyncOptions): void {
-        $command = "rsync $rsyncOptions '$source' '$destination' --log-file='" . ERSettings::getRsyncLogFilePath() . "'";
-//        self::$logger->info("Current command: $command");
-        exec($command, $output, $return_var);
-
-        if ($return_var !== 0) {
-            throw new RsyncFailureException(code: $return_var);
-        }
     }
 }
