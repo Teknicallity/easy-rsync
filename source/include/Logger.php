@@ -1,9 +1,9 @@
 <?php
+
 namespace unraid\plugins\EasyRsync;
 
 require_once __DIR__ ."/LogHandler.php";
-
-use unraid\plugins\EasyRsync\LogHandler;
+require_once __DIR__ ."/ERSettings.php";
 
 enum LogLevel: int {
     case DEBUG = 0;
@@ -29,9 +29,11 @@ class Logger {
         }
     }
 
-    public static function getLogger(LogLevel $logLevel = LogLevel::INFO, ?string $loglevelString = null): Logger {
+    public static function getLogger(): Logger {
         if (self::$instance === null) {
-            self::$instance = new Logger($logLevel, $loglevelString);
+            $userConfig = ERSettings::getUserConfig();
+            self::$instance = new Logger(loglevelString: $userConfig["logLevel"]);
+            unset($userConfig);
         }
         return self::$instance;
     }
