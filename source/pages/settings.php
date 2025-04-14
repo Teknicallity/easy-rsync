@@ -25,7 +25,7 @@ try {
 if ($_POST) {
     $userConfig = ERSettings::getUserConfig();
 
-    $logger = Logger::getLogger(loglevelString: $userConfig["logLevel"]);
+    $logger = Logger::getLogger();
 
 //    ob_start();
 //    var_dump($_POST);
@@ -116,7 +116,7 @@ function bool_to_str($val): string {
 <form id="erSettingsForm" method="post">
     <div class="title">
         <div style="display: flex; justify-content: space-between">
-            <span>Settings</span>
+            <span>General Settings</span>
             <div>
                 <span>Status: </span>
                 <span id="backupStatusTextSettings" class="backupStatusText"></span>
@@ -124,25 +124,6 @@ function bool_to_str($val): string {
         </div>
     </div>
 
-    <dl>
-        <dt>Text Checkbox</dt>
-        <dd><input type="checkbox" id="testBox" name="testBox" value="Testing"/></dd>
-    </dl>
-    <blockquote class="inline_help"></blockquote>
-
-    <!-- </blockquote>
-    <dl>
-        <dt></dt>
-        <dd>
-            <select>
-                <option></option>
-            </select>
-        </dd>
-    </dl>
-    <blockquote class="inline_help">
-
-    </blockquote> -->
-    
     <dl>
         <dt>Capture file datetimes</dt>
         <dd>
@@ -212,6 +193,9 @@ function bool_to_str($val): string {
         Set the log level for the plugin log. Recommended to keep on Info.
     </blockquote>
 
+    <div class="title">
+        Notifications and Scheduling
+    </div>
     <dl>
         <dt>Backup Frequency</dt>
         <dd>

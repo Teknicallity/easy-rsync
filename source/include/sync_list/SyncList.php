@@ -7,17 +7,26 @@ use InvalidArgumentException;
 
 require_once dirname(__DIR__) . "/ERSettings.php";
 require_once dirname(__DIR__) . "/FileUtils.php";
-require_once __DIR__ . "/SyncEntry.php";
+require_once dirname(__DIR__) . "/ERHelper.php";
 require_once __DIR__ . "/RsyncOptions.php";
+require_once __DIR__ . "/SyncEntry.php";
+require_once __DIR__ . "/SyncResult.php";
+require_once __DIR__ . "/SyncStatus.php";
 require_once dirname(__DIR__) . "/paths/Destination.php";
 
+$logger = Logger::getLogger();
+
 class SyncList {
+    private static Logger $logger;
     /**
      * @var SyncEntry[]
      */
     public array $entries = [];
+    private bool $abortRequested = false;
+    public ?SyncStatus $finalStatus = null;
 
     private function __construct(array $entries) {
+        self::$logger = Logger::getLogger();
         $this->entries = $entries;
     }
 
@@ -62,5 +71,51 @@ class SyncList {
         }
 
         return new SyncList($syncEntries);
+    }
+
+    public function syncAll(bool $doDryRun): void {
+        $this->abortRequested = false;
+        $this->finalStatus = null;
+
+        foreach ($this->entries as $entry) {
+//            if ($this->abortRequested) break;
+            $outcome = $entry->sync(fn() => $this->checkAbortStatus(), $doDryRun);
+
+            if ($outcome->isWorseThan($this->finalStatus)) {
+                $this->finalStatus = $outcome;
+            }
+        }
+    }
+
+    /**
+     * Checks if abort has been requested and updates the internal state accordingly.
+     */
+    private function checkAbortStatus(): bool {
+        if ($this->abortRequested) return true;
+
+        $isAbortRequested = ERHelper::isAbortRequested();
+        if ($isAbortRequested) {
+            $this->abortRequested = true;
+        }
+
+        return $isAbortRequested;
+    }
+
+    public function generateSummaryMessage(bool $useEmojis): string {
+        $summary = "";
+
+        foreach ($this->entries as $index => $entry) {
+            $summary .= "*Sync Job #" . ($index + 1) . "*\\n";
+            $results = $entry->results;
+            foreach ($results as $result) {
+                $icon = $useEmojis ? $result->status->getStatusIcon() : $result->status->getStatusText();
+//                $source = $this->truncateText($result->source);
+//                $destination = $this->truncateText($result->destination);
+                $summary .= "$icon $result->source ->\\n⠀⠀$result->destination\\n";  // uses '⠀⠀', not spaces
+            }
+            $summary .= "\\n";
+        }
+
+        return trim($summary);
     }
 }

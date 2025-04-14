@@ -5,11 +5,14 @@ require_once dirname(__DIR__) ."/include/ERHelper.php";
 require_once dirname(__DIR__) ."/include/ERSettings.php";
 require_once dirname(__DIR__) ."/include/Logger.php";
 require_once dirname(__DIR__) ."/include/notifications/Notification.php";
+require_once dirname(__DIR__) ."/include/notifications/NotificationLevel.php";
 require_once dirname(__DIR__) ."/include/paths/Destination.php";
 require_once dirname(__DIR__) ."/include/paths/PathHelper.php";
 require_once dirname(__DIR__) ."/include/sync_list/RsyncOptions.php";
 require_once dirname(__DIR__) ."/include/sync_list/SyncEntry.php";
 require_once dirname(__DIR__) ."/include/sync_list/SyncList.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncResult.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncStatus.php";
 
 use unraid\plugins\EasyRsync\BackupHelper;
 use unraid\plugins\EasyRsync\Destination;
@@ -20,12 +23,13 @@ use unraid\plugins\EasyRsync\Notification;
 use unraid\plugins\EasyRsync\NotificationLevel;
 use unraid\plugins\EasyRsync\PathHelper;
 use unraid\plugins\EasyRsync\SyncList;
+use unraid\plugins\EasyRsync\SyncStatus;
 use unraid\plugins\EasyRsync\SyncEntry;
 use unraid\plugins\EasyRsync\RsyncOptions;
 
 $userConfig = ERSettings::getUserConfig();
 
-$logger = Logger::getLogger(loglevelString: $userConfig["logLevel"]);
+$logger = Logger::getLogger();
 
 $shortopts = "n";
 
@@ -79,7 +83,7 @@ $logger->debug('Array is online');
 // check if config file exists
 if (!file_exists(ERSettings::getPathsJsonFilePath())) {
     $logger->error('Cannot find path list config file to read from.');
-    cleanup(failure: true);
+    cleanup();
     exit();
 }
 $logger->debug('Paths list file exists');
@@ -90,9 +94,6 @@ $logger->info('Successfully parsed paths');
 
 // Todo ensure no paths are empty
 
-$allSyncSummaries = [];
-$hadFailure = false;
-
 $notification = new Notification(
     "Sync started",
     "Sync started at " . $backupStartedTime->format("Y/m/d H:i:s"),
@@ -100,91 +101,42 @@ $notification = new Notification(
 );
 $notification->send();
 
-foreach ($syncList->entries as $index => $syncEntry) {
-    $syncSummary = [];
-    //Summary map for storing final log/notifier messages for each source and or destination
-    foreach ($syncEntry->sources as $source) {
-        foreach ($syncEntry->destinations as $destination) {
-            $syncSummary[$source][$destination] = $useEmojis ? "⏭️" : "Skipped:";
-        }
-    }
+$syncList->syncAll(doDryRun: $dryRunMode);
 
-    //TODO change over to entry's rsync options
-    $rsyncOptions = BackupHelper::buildRsyncOptions(doDryRun: $dryRunMode);
-    $logger->debug($rsyncOptions);
+handleFinalSummary($syncList, $useEmojis);
 
-    foreach ($syncEntry->sources as $source) {
-        foreach ($syncEntry->destinations as $destination) {
-            if (ERHelper::isAbortRequested()) {
-                handleAbortRequest($allSyncSummaries);
-            }
-
-            // Construct and execute the rsync command.
-            $command = "rsync $rsyncOptions '$source' '$destination' --log-file='" . ERSettings::getRsyncLogFilePath() . "'";
-            $logger->info("Current command: $command");
-            exec($command, $output, $return_var);
-
-            if ($return_var !== 0) {
-                $logger->error("Failed to sync '$source' with '$destination'. Check Rsync Log.");
-                $syncSummary[$source][$destination] = $useEmojis ? "❌" : "Failure:";
-                $hadFailure = true;
-            } else {
-                $logger->info("Successfully synced '$source' with '$destination'.");
-                $syncSummary[$source][$destination] = $useEmojis ? "✅" : "Success:";
-            }
-        }
-    }
-    $allSyncSummaries[] = $syncSummary;
-}
-handleFinalSummary($allSyncSummaries, $hadFailure);
-
-
-function handleAbortRequest(array $allSyncSummaries): never {
-    global $logger;
-
-    $flatSummary = [];
-    foreach ($allSyncSummaries as $summary) {
-        $flatSummary = array_merge_recursive($flatSummary, $summary);
-    }
-
-    $notification = new Notification(
-        "Sync Aborted",
-        "The sync operation was aborted by user",
-        message: getFinalNotificationPathsMessage($flatSummary),
-        level: NotificationLevel::WARNING
-    );
-    $notification->send();
-
-    $logger->warning("Sync aborted");
-    cleanup(failure: true);
-    exit(1);
-}
-
-function handleFinalSummary(array $allSyncSummaries, bool $hadFailure): never {
+function handleFinalSummary(SyncList $syncList, bool $useEmojis): never {
     global $logger, $backupStartedTime;
 
     $backupFinishedTime = new DateTime();
     $backupTime = $backupStartedTime->diff($backupFinishedTime);
     $duration = $backupTime->format('%H:%I:%S');
 
-    $flatSummary = [];
-    foreach ($allSyncSummaries as $summary) {
-        $flatSummary = array_merge_recursive($flatSummary, $summary);
-    }
+    $subject = match ($syncList->finalStatus) {
+        SyncStatus::Success => "Sync Completed",
+        SyncStatus::Failed => "Sync Completed with Errors",
+        SyncStatus::Skipped => "Sync Aborted",
+    };
+
+    $notificationLevel = match ($syncList->finalStatus) {
+        SyncStatus::Success => NotificationLevel::NORMAL,
+        SyncStatus::Failed => NotificationLevel::ALERT,
+        SyncStatus::Skipped => NotificationLevel::WARNING,
+    };
 
     $notification = new Notification(
-        $hadFailure ? "Sync Completed with Errors" : "Sync Completed",
+        $subject,
         "Completed in $duration",
-        message: getFinalNotificationPathsMessage($flatSummary),
-        level: $hadFailure ? NotificationLevel::ALERT : NotificationLevel::NORMAL
+        message: $syncList->generateSummaryMessage($useEmojis),
+        level: $notificationLevel
     );
     $notification->send();
 
     cleanup();
-    exit($hadFailure ? 1 : 0);
+    exit($syncList->finalStatus == SyncStatus::Success ? 0 : 1);
 }
 
-function cleanup(bool $failure = false): void {
+function cleanup(): void {
     global $logger;
 
     $logger->info("Cleaning up");
@@ -200,33 +152,6 @@ function cleanup(bool $failure = false): void {
     }
 
     $logger->info("Cleanup complete");
-}
-
-/**
- * @param array $syncSummary
- * @return string
- */
-function getFinalNotificationPathsMessage(array $syncSummary): string {
-    global $syncList;
-
-    $message = "";
-    $count = count($syncList->entries);
-    foreach ($syncList->entries as $jobIndex => $syncEntry) {
-        $message .= "**Sync Job #" . ($jobIndex + 1) . "**\\n";
-        foreach ($syncEntry->sources as $source) {
-            $filteredSourcePath = shortenSourcePath($source);
-
-            foreach ($syncEntry->destinations as $destination) {
-                $filteredDestination = shortenDestinationPath($destination);
-
-                $message .= $syncSummary[$source][$destination] . ' ' .
-                    $filteredSourcePath . ' ->\\n⠀⠀' . // uses '⠀⠀' at end, not spaces
-                    $filteredDestination . "\\n";
-            }
-        }
-        $message .= "\\n";
-    }
-    return $message;
 }
 
 function shortenSourcePath(string $source): string {
