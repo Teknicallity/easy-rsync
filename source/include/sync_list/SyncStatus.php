@@ -4,8 +4,8 @@ namespace unraid\plugins\EasyRsync;
 
 enum SyncStatus: int {
     case Success = 0;
-    case Failed = 1;
-    case Skipped = 2;
+    case Skipped = 1;
+    case Failed = 2;
 
     public static function getWorseStatus(SyncStatus $status1, SyncStatus $status2): SyncStatus {
         if ($status1->value >= $status2->value) {
