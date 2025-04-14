@@ -49,7 +49,12 @@ class SyncEntry {
         $destinations = self::normalizePathList($destinationsRaw);
 
         $rsyncOptionsJson = $data['rsyncOptions'] ?? null;
-        $rsyncOptions = !is_null($rsyncOptionsJson) ? RsyncOptions::fromArray($rsyncOptionsJson) : null;
+        if ($rsyncOptionsJson !== null) {
+            $rsyncOptions = RsyncOptions::fromArray($rsyncOptionsJson);
+        } else {
+            $userConfig = ERSettings::getUserConfig();
+            $rsyncOptions = RsyncOptions::fromArray($userConfig);
+        }
 
         return new SyncEntry(
             sources: $sources,
