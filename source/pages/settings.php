@@ -446,9 +446,10 @@ function bool_to_str($val): string {
 </form>
 
 <div>
-    <button id="manualBackupButton">Manual BackupJQuery</button>
-    <button id="manualDryBackupButton">Manual Dry Backup</button>
-    <button id="getBackupStatus">Get StatusJQuery</button>
+    <button class="manualBackupButton">Manual Backup</button>
+    <button class="manualDryBackupButton">Manual Dry Backup</button>
+    <input type='button' class="abortBtn" value='Abort' disabled/>
+<!--    <button id="getBackupStatus">Get StatusJQuery</button>-->
     <div id="backupStatusDisplay"></div>
 </div>
 
@@ -477,7 +478,7 @@ function bool_to_str($val): string {
         });
 
         // Start manual backup
-        $('#manualBackupButton').on('click', function() {
+        $('.manualBackupButton').on('click', function() {
             $.post(urlSettings, {
                 action: 'manualBackup',
             }, function(response) {
@@ -486,7 +487,7 @@ function bool_to_str($val): string {
         });
 
         // Start dry test backup
-        $('#manualDryBackupButton').on('click', function() {
+        $('.manualDryBackupButton').on('click', function() {
             $.post(urlSettings, {
                 action: 'manualDryBackup',
             }, function(response) {
