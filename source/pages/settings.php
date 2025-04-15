@@ -268,13 +268,18 @@ function bool_to_str($val): string {
         <dd>
             <input type="number" min="0" max="59" id="frequencyMinute" name="frequencyMinute" value="<?= $userConfig["frequencyMinute"] ?>">
         </dd>
+    </dl>
 
+    <dl>
         <dt>Custom Entry</dt>
         <dd>
             <input type="text" id="frequencyCustom" name="frequencyCustom"
                    value="<?= $userConfig["frequencyCustom"] ?>" placeholder="Will disable other time options">
         </dd>
     </dl>
+    <blockquote class="inline_help">
+        Set the custom frequency in cronjob format.
+    </blockquote>
 
     <div class="title">
         Sync Jobs
