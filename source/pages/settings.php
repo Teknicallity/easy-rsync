@@ -197,6 +197,21 @@ function bool_to_str($val): string {
         Notifications and Scheduling
     </div>
     <dl>
+        <dt>Notification Mode</dt>
+        <dd>
+            <select id="notificationMode" name="notificationMode">
+                <?= mk_option($userConfig["notificationMode"], "none", "None")?>
+                <?= mk_option($userConfig["notificationMode"], "foreach", "After Each Sync")?>
+                <?= mk_option($userConfig["notificationMode"], "summary", "Summary")?>
+                <?= mk_option($userConfig["notificationMode"], "both", "Both")?>
+            </select>
+        </dd>
+    </dl>
+    <blockquote class="inline_help">
+        Choose when you want to receive notifications about your sync activity.
+    </blockquote>
+
+    <dl>
         <dt>Backup Frequency</dt>
         <dd>
             <select id="backupFrequency" name="backupFrequency" onchange="updateCronEntries();">
