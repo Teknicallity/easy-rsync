@@ -114,7 +114,7 @@ class SyncList {
         $summary = "";
 
         foreach ($this->entries as $index => $entry) {
-            $summary .= "*Sync Job #" . ($index + 1) . "*\\n";
+            $summary .= "**Sync Job #" . ($index + 1) . "**\\n";
             $results = $entry->results;
             foreach ($results as $result) {
                 $icon = $useEmojis ? $result->status->getStatusIcon() : $result->status->getStatusText();
