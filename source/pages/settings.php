@@ -10,17 +10,12 @@ require_once dirname(__DIR__) ."/include/sync_list/SyncList.php";
 require_once dirname(__DIR__) ."/include/sync_list/SyncEntry.php";
 require_once "/usr/local/emhttp/plugins/dynamix/include/Helpers.php"; //mk_option
 
-/*
-Take list of directories to backup
-take remote backup host and path
-*/
-
-try {
-    $appName = ERSettings::$appName;
-    echo "/plugins/" . $appName . "/include/http_handler.php\n";
-} catch (Exception $e) {
-    die("Error: " . $e->getMessage());
-}
+//try {
+//    $appName = ERSettings::$appName;
+//    echo "/plugins/" . $appName . "/include/http_handler.php\n";
+//} catch (Exception $e) {
+//    die("Error: " . $e->getMessage());
+//}
 
 if ($_POST) {
     $userConfig = ERSettings::getUserConfig();
@@ -125,7 +120,7 @@ function bool_to_str($val): string {
     </div>
 
     <dl>
-        <dt>Capture file datetimes</dt>
+        <dt>Capture File Datetimes In Place</dt>
         <dd>
             <select id="rsyncTimes" name="rsyncTimes" class="rsyncOption globalOption">
                 <?= mk_option($userConfig["rsyncTimes"], "false", "No") ?>
@@ -134,11 +129,11 @@ function bool_to_str($val): string {
         </dd>
     </dl>
     <blockquote class="inline_help">
-
+        Whether to use the existing file datetimes or ignore and apply current time.
     </blockquote>
     
     <dl>
-        <dt>When to delete old files</dt>
+        <dt>When to Delete Old Transfer Files</dt>
         <dd>
             <select id="rsyncDelete" name="rsyncDelete" class="rsyncOption globalOption">
                 <!-- <option value="after">After</option>
@@ -153,11 +148,11 @@ function bool_to_str($val): string {
         </dd>
     </dl>
     <blockquote class="inline_help">
-        Look up rsync delete-after
+        When should RSync delete files in destination directory to mirror source.
     </blockquote>
     
     <dl>
-        <dt>Compress backup</dt>
+        <dt>Compress Data During Transit</dt>
         <dd>
             <select id="rsyncCompress" name="rsyncCompress" class="rsyncOption globalOption">
                 <?= mk_option($userConfig["rsyncCompress"], "false", "No") ?>
@@ -166,7 +161,7 @@ function bool_to_str($val): string {
         </dd>
     </dl>
     <blockquote class="inline_help">
-
+        Should Rsync compress the files before transfer, and decompress on destination host.
     </blockquote>
 
     <dl>
@@ -223,7 +218,7 @@ function bool_to_str($val): string {
             </select>
         </dd>
 
-        <dt>Day of Week:</dt>
+        <dt>Day of Week</dt>
         <dd>
             <select id="frequencyWeekday" name="frequencyWeekday">
                 <?= mk_option($userConfig["frequencyWeekday"], "0", "Sunday") ?>
