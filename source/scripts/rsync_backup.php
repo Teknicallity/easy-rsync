@@ -99,7 +99,7 @@ $syncList->syncAll(doDryRun: $dryRunMode);
 handleFinalSummary($syncList, $useEmojis);
 
 function handleFinalSummary(SyncList $syncList, bool $useEmojis): never {
-    global $logger, $backupStartedTime;
+    global $logger, $backupStartedTime, $userConfig;
 
     $backupFinishedTime = new DateTime();
     $backupTime = $backupStartedTime->diff($backupFinishedTime);
@@ -111,19 +111,35 @@ function handleFinalSummary(SyncList $syncList, bool $useEmojis): never {
         SyncStatus::Skipped => "Sync Aborted",
     };
 
-    $notificationLevel = match ($syncList->finalStatus) {
-        SyncStatus::Success => NotificationLevel::NORMAL,
-        SyncStatus::Failed => NotificationLevel::ALERT,
-        SyncStatus::Skipped => NotificationLevel::WARNING,
-    };
+    $doSummaryNotification = $userConfig["notificationMode"] === "both" || $userConfig["notificationMode"] === "summary";
+    if ($doSummaryNotification) {
+        $notificationLevel = match ($syncList->finalStatus) {
+            SyncStatus::Success => NotificationLevel::NORMAL,
+            SyncStatus::Failed => NotificationLevel::ALERT,
+            SyncStatus::Skipped => NotificationLevel::WARNING,
+        };
 
-    $notification = new Notification(
-        $subject,
-        "Completed in $duration",
-        message: $syncList->generateSummaryMessage($useEmojis),
-        level: $notificationLevel
-    );
-    $notification->send();
+        $notification = new Notification(
+            $subject,
+            "Completed in $duration",
+            message: $syncList->generateSummaryMessage($useEmojis),
+            level: $notificationLevel
+        );
+
+        $notification->send();
+    }
+
+    $logMessage = $subject . ". Took " . $duration;
+    switch ($syncList->finalStatus) {
+        case SyncStatus::Failed:
+            $logger->error($logMessage);
+            break;
+        case SyncStatus::Skipped:
+            $logger->warning($logMessage);
+            break;
+        default:
+            $logger->info($logMessage);
+    }
 
     cleanup();
     exit($syncList->finalStatus == SyncStatus::Success ? 0 : 1);

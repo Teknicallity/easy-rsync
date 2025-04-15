@@ -2,6 +2,7 @@
 
 namespace unraid\plugins\EasyRsync;
 
+use DateTime;
 use Exception;
 use InvalidArgumentException;
 
@@ -82,17 +83,22 @@ class SyncList {
             throw new Exception("Syncer not set");
         }
 
+        $userConfig = ERSettings::getUserConfig();
+
         $this->abortRequested = false;
         $this->finalStatus = null;
 
-        foreach ($this->entries as $entry) {
+        foreach ($this->entries as $index => $entry) {
 //            if ($this->abortRequested) break;
+            $backupEntryStartedTime = new DateTime();
             $entry->syncer = $this->syncer;
-            $outcome = $entry->sync(fn() => $this->checkAbortStatus(), $doDryRun);
+            $outcomeStatus = $entry->sync(fn() => $this->checkAbortStatus(), $doDryRun);
 
-            if ($outcome->isWorseThan($this->finalStatus)) {
-                $this->finalStatus = $outcome;
+            if ($outcomeStatus->isWorseThan($this->finalStatus)) {
+                $this->finalStatus = $outcomeStatus;
             }
+
+            $this->handleEntrySyncNotifications($entry, $userConfig, $backupEntryStartedTime, $outcomeStatus, $index);
         }
     }
 
@@ -115,16 +121,67 @@ class SyncList {
 
         foreach ($this->entries as $index => $entry) {
             $summary .= "**Sync Job #" . ($index + 1) . "**\\n";
-            $results = $entry->results;
-            foreach ($results as $result) {
-                $icon = $useEmojis ? $result->status->getStatusIcon() : $result->status->getStatusText();
-//                $source = $this->truncateText($result->source);
-//                $destination = $this->truncateText($result->destination);
-                $summary .= "$icon $result->source ->\\n⠀⠀$result->destination\\n";  // uses '⠀⠀', not spaces
-            }
+            $summary .= $this->generateEntryMessage($entry, $useEmojis);
             $summary .= "\\n";
         }
 
         return trim($summary);
+    }
+
+    private function generateEntryMessage(SyncEntry $entry, bool $useEmojis): string {
+        $message = "";
+        $results = $entry->results;
+        foreach ($results as $result) {
+            $icon = $useEmojis ? $result->status->getStatusIcon() : $result->status->getStatusText();
+//                $source = $this->truncateText($result->source);
+//                $destination = $this->truncateText($result->destination);
+            $message .= "$icon $result->source ->\\n⠀⠀$result->destination\\n";  // uses '⠀⠀', not spaces
+        }
+
+        return trim($message);
+    }
+
+    private function handleEntrySyncNotifications(
+        SyncEntry $entry, array $userConfig, DateTime $startedTime, SyncStatus $outcomeStatus, int $index
+    ): void {
+        $backupFinishedTime = new DateTime();
+        $backupTime = $startedTime->diff($backupFinishedTime);
+        $duration = $backupTime->format('%H:%I:%S');
+
+        $subject = match ($outcomeStatus) {
+            SyncStatus::Success => "Sync Entry #" . $index+1 . " Completed",
+            SyncStatus::Failed => "Sync Entry #" . $index+1 . " Completed with Errors",
+            SyncStatus::Skipped => "Sync Entry #" . $index+1 . " Aborted",
+        };
+
+        $doForEachNotification = $userConfig["notificationMode"] === "both" || $userConfig["notificationMode"] === "foreach";
+        if ($doForEachNotification) {
+            $notificationLevel = match ($outcomeStatus) {
+                SyncStatus::Success => NotificationLevel::NORMAL,
+                SyncStatus::Failed => NotificationLevel::ALERT,
+                SyncStatus::Skipped => NotificationLevel::WARNING,
+            };
+
+            $notification = new Notification(
+                $subject,
+                "Completed in $duration",
+                message: $this->generateEntryMessage($entry, true),
+                level: $notificationLevel
+            );
+
+            $notification->send();
+        }
+
+        $logMessage = $subject . ". Took " . $duration;
+        switch ($outcomeStatus) {
+            case SyncStatus::Failed:
+                self::$logger->error($logMessage);
+                break;
+            case SyncStatus::Skipped:
+                self::$logger->warning($logMessage);
+                break;
+            default:
+                self::$logger->info($logMessage);
+        }
     }
 }

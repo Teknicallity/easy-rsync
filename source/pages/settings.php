@@ -197,7 +197,7 @@ function bool_to_str($val): string {
         Notifications and Scheduling
     </div>
     <dl>
-        <dt>Notification Mode</dt>
+        <dt>Summary Notification</dt>
         <dd>
             <select id="notificationMode" name="notificationMode">
                 <?= mk_option($userConfig["notificationMode"], "none", "None")?>
