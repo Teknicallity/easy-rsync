@@ -1,4 +1,7 @@
 <?php
+
+namespace unraid\plugins\EasyRsync;
+
 // Set document root for Unraid environment.
 $docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
 // Include Unraid's GUI helper functions.
@@ -7,7 +10,6 @@ require_once "$docroot/webGui/include/Helpers.php";
 
 require_once dirname(__DIR__) ."/include/ERSettings.php";
 
-use unraid\plugins\EasyRsync\ERSettings;
 ?>
 
 <style>

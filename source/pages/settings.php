@@ -2,13 +2,18 @@
 
 namespace unraid\plugins\EasyRsync;
 
-use Exception;
+// Set document root for Unraid environment.
+$docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
+// Include Unraid's GUI helper functions.
+require_once "$docroot/webGui/include/Translations.php";
+require_once "$docroot/webGui/include/Helpers.php"; //mk_option
 
 require_once dirname(__DIR__) ."/include/ERSettings.php";
 require_once dirname(__DIR__) ."/include/Logger.php";
 require_once dirname(__DIR__) ."/include/sync_list/SyncList.php";
 require_once dirname(__DIR__) ."/include/sync_list/SyncEntry.php";
-require_once "/usr/local/emhttp/plugins/dynamix/include/Helpers.php"; //mk_option
+
+use Exception;
 
 //try {
 //    $appName = ERSettings::$appName;
@@ -104,6 +109,10 @@ function bool_to_str($val): string {
     .deleteSyncJobButton {
         margin-top: 0 !important;
         margin-bottom: 0 !important;
+    }
+
+    .tabs > .tab > .content {
+        margin-top: 5rem;
     }
 </style>
 
