@@ -181,10 +181,14 @@ if [[ -n "$plg_filepath" && "$dry_run" == false ]]; then
     sed -i "s|<!ENTITY pluginName   \".*\">|<!ENTITY pluginName   \"$plugin_name\">|" "$plg_filepath"
     sed -i "s|<!ENTITY version      \".*\">|<!ENTITY version      \"$version\">|" "$plg_filepath"
 
+    if [[ "$beta_flag" == true ]]; then
+      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"dev\">|" "$plg_filepath"
+    else
+      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"main\">|" "$plg_filepath"
+    fi
 
     if [[ -z "$unraidHost" ]]; then #unraid host not set, package is in github main
       sed -i "s|^<!-- <URL>\&repoLocation;/archive/\&pluginName;-\&version;\.txz</URL> -->|<URL>\&repoLocation;/archive/\&pluginName;-\&version;\.txz</URL>|" "$plg_filepath"
-      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"main\">|" "$plg_filepath"
     else # unraid host set, package should be transferred and use dev branch files
       sed -i "s|^<URL>\&repoLocation;/archive/\&pluginName;-\&version;\.txz</URL>|<!-- <URL>\&repoLocation;/archive/\&pluginName;-\&version;\.txz</URL> -->|" "$plg_filepath"
       sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"dev\">|" "$plg_filepath"
