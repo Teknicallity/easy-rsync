@@ -3,10 +3,12 @@
 # Default values
 version_suffix=""
 plugin_dir="$(dirname "$(realpath "$0")")"
-plg_filepath=$(find "$plugin_dir" -name "*.plg" -exec realpath {} \;)
 repo_name=$(printf '%q\n' "${plugin_dir##*/}") # takes the name from root directory
 plugin_name="${repo_name//-/\.}" # replaces dashes with dots
+plg_filepath=$(find "$plugin_dir" -name "${plugin_name}.plg" -exec realpath {} \;)
+plg_beta_filepath=$(find "$plugin_dir" -name "${plugin_name}.beta.plg" -exec realpath {} \;)
 accept_flag=false
+beta_flag=false
 unraidHost=""
 dry_run=false
 
@@ -23,6 +25,7 @@ usage() {
   echo "  -d             Dry Run: Do not make any changes to files or directories."
   echo "  -y             Accept mode: Skip all confirmations and proceed without user input."
   echo "  -u <hostname>  Specifies an Unraid host where the archive will be sent. The script assumes this host is accessible via rsync."
+  echo "  -b             Beta build. Adds beta tag to pages and plugin name"
   echo "  -h             Display this help message and exit."
   echo
   echo "Example usage:"
@@ -33,7 +36,7 @@ usage() {
 }
 
 # Parse command-line options
-while getopts ":v:p:u:dyh" opt; do
+while getopts ":v:p:u:dybh" opt; do
   case ${opt} in
     v)
       version_suffix="$OPTARG"
@@ -49,6 +52,9 @@ while getopts ":v:p:u:dyh" opt; do
       ;;
     y)
       accept_flag=true
+      ;;
+    b)
+      beta_flag=true
       ;;
     h)
       usage
@@ -75,6 +81,12 @@ if [[ -n "$version_suffix" ]]; then
   version=$version_date$version_suffix
 else
   version=$version_date
+fi
+
+# Beta flag handling
+if [[ "$beta_flag" == true ]]; then
+  plugin_name="${plugin_name}.beta"
+  plg_filepath="$plg_beta_filepath"
 fi
 
 # Skip confirmation if force flag is enabled
@@ -118,6 +130,20 @@ cp --parents -f $(find . -type f ! \( -iname "pkg_build.sh" -o -iname "sftp-conf
 chmod 0755 -R "$tmpdir"
 #chown root:root -R "$tmpdir"
 chmod 0755 "$plugin_dir"
+
+# Beta flag handling
+if [[ "$beta_flag" == true ]]; then
+  # rename .page files
+  find "$tmpdir/usr/local/emhttp/plugins/$plugin_name/" \
+  -maxdepth 1 -type f -name "*.page" -exec bash -c 'for f; do mv -- "$f" "${f%.page}.Beta.page"; done' _ {} +
+
+  # replace plugin name within file
+  find "$tmpdir/usr/local/emhttp/plugins/$plugin_name/" \
+  -type f -name "*.Beta.page" -exec sed -i 's/Menu="EasyRsync:/Menu="EasyRsync.Beta:/g' {} +
+
+  find "$tmpdir/usr/local/emhttp/plugins/$plugin_name/" \
+  -type f -name "*.Beta.page" -exec sed -i 's/\/easy.rsync\//\/easy.rsync.beta\//g' {} +
+fi
 
 # If dry run, only create archive package in tmp directory
 if [[ "$dry_run" == true ]]; then
