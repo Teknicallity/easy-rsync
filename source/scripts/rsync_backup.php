@@ -46,8 +46,8 @@ if (ERHelper::isBackupRunning()) {
 $logger->debug("Backup is not already running");
 
 // if tempfolder exists, remove all logs
-if (file_exists(ERSettings::$tempFolder)) {
-    exec("rm " . ERSettings::$tempFolder . '/*.log');
+if (file_exists(ERSettings::getTempDir())) {
+    exec("rm " . ERSettings::getTempDir() . '/*.log');
     $logger->info("Removing previous logs");
 }
 

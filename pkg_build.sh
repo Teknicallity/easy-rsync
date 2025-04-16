@@ -141,8 +141,13 @@ if [[ "$beta_flag" == true ]]; then
   find "$tmpdir/usr/local/emhttp/plugins/$plugin_name/" \
   -type f -name "*.Beta.page" -exec sed -i 's/Menu="EasyRsync:/Menu="EasyRsync.Beta:/g' {} +
 
+  # replace include filepath
   find "$tmpdir/usr/local/emhttp/plugins/$plugin_name/" \
   -type f -name "*.Beta.page" -exec sed -i 's/\/easy.rsync\//\/easy.rsync.beta\//g' {} +
+
+  # replace appname in settings
+  find "$tmpdir/usr/local/emhttp/plugins/$plugin_name/" \
+  -type f -name "ERSettings.php" -exec sed -i "s/\$appName = 'easy.rsync'/\$appName = 'easy.rsync.beta'/g" {} +
 fi
 
 # If dry run, only create archive package in tmp directory

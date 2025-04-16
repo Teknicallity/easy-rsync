@@ -9,15 +9,16 @@ require_once "$docroot/webGui/include/Wrappers.php";
 class ERSettings {
 
     public static string $appName = 'easy.rsync';
-    public static string $configDir = '/boot/config/plugins/easy.rsync';
-    private static string $pathsFile = 'backup_paths.json';
-    private static string $cronFile = 'easy.rsync.cron';
-    public static string $tempFolder = '/tmp/easy.rsync';
-    private static string $logFile = 'easy-rsync.log';
-    private static string $rsyncLogFile = 'rsync.log';
-    private static string $stateRsyncRunningFile = 'running';
-    private static string $stateRsyncAbortedFile = 'aborted';
+    private static string $pathsFileName = 'backup_paths.json';
+    private static string $logFileName = 'easy-rsync.log';
+    private static string $rsyncLogFileName = 'rsync.log';
+    private static string $stateRsyncRunningFileName = 'running';
+    private static string $stateRsyncAbortedFileName = 'aborted';
     public static string $emhttpVars = '/var/local/emhttp/var.ini';
+
+    public static function getConfigDir() : string { return '/boot/config/plugins/' . self::$appName; }
+    private static function getCronFileName() : string { return self::$appName . '.cron'; }
+    public static function getTempDir() : string { return '/tmp/' . self::$appName; }
 
     public static function getUserConfig(): array{
         return parse_plugin_cfg(self::$appName);
@@ -25,7 +26,7 @@ class ERSettings {
 
     public static function saveUserConfig(array $userConfig): bool|int {
         $ini_contents = self::arrayToIni($userConfig);
-        $configFilePath = self::$configDir .'/easy.rsync.cfg';
+        $configFilePath = self::getConfigDir() .'/easy.rsync.cfg';
         return file_put_contents($configFilePath, $ini_contents);
     }
 
@@ -48,23 +49,23 @@ class ERSettings {
     }
 
     public static function getPathsJsonFilePath(): string {
-        return self::$configDir . '/' . self::$pathsFile;
+        return self::getConfigDir() . '/' . self::$pathsFileName;
     }
     
     public static function getLogFilePath(): string {
-        return self::$tempFolder . '/' . self::$logFile;
+        return self::getTempDir() . '/' . self::$logFileName;
     }
 
     public static function getRsyncLogFilePath(): string {
-        return self::$tempFolder . '/' . self::$rsyncLogFile;
+        return self::getTempDir() . '/' . self::$rsyncLogFileName;
     }
 
     public static function getStateRsyncRunningFilePath(): string {
-        return self::$tempFolder . '/' . self::$stateRsyncRunningFile;
+        return self::getTempDir() . '/' . self::$stateRsyncRunningFileName;
     }
 
     public static function getStateRsyncAbortedFilePath(): string {
-        return self::$tempFolder . '/' . self::$stateRsyncAbortedFile;
+        return self::getTempDir() . '/' . self::$stateRsyncAbortedFileName;
     }
 
     private static function savePaths(array $paths): bool|int {
@@ -118,7 +119,7 @@ class ERSettings {
             default => $cronContents = ''
         };
 
-        $cronFilePath = self::$configDir . '/' . self::$cronFile;
+        $cronFilePath = self::getConfigDir() . '/' . self::getCronFileName();
         if (!empty($cronContents)) {
             $cronContents .= " php ". dirname(__DIR__) ."/scripts/rsync_backup.php > /dev/null 2>&1";
             file_put_contents($cronFilePath, $cronContents . PHP_EOL . PHP_EOL);
