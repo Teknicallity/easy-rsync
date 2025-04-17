@@ -1,6 +1,6 @@
 Menu="EasyRsync:1"
 Title="Settings"
-Tag="hello-world-icon.png"
+Tag="cog"
 ---
 <?php
 include "/usr/local/emhttp/plugins/easy.rsync/pages/settings.php";

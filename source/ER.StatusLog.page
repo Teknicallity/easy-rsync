@@ -1,5 +1,6 @@
 Menu="EasyRsync:2"
 Title="Status/Log"
+Tag="bars"
 ---
 <?php
 include "/usr/local/emhttp/plugins/easy.rsync/pages/status_log.php";
