@@ -16,9 +16,13 @@ class ERSettings {
     private static string $stateRsyncAbortedFileName = 'aborted';
     public static string $emhttpVars = '/var/local/emhttp/var.ini';
 
-    public static function getConfigDir() : string { return '/boot/config/plugins/' . self::$appName; }
+    public static function getConfigDir() : string {
+        return getenv('EASY_RSYNC_CONFIG_DIR') ?: '/boot/config/plugins/' . self::$appName;
+    }
     private static function getCronFileName() : string { return self::$appName . '.cron'; }
-    public static function getTempDir() : string { return '/tmp/' . self::$appName; }
+    public static function getTempDir() : string {
+        return getenv('EASY_RSYNC_TEMP_DIR') ?: '/tmp/' . self::$appName;
+    }
 
     public static function getUserConfig(): array{
         return parse_plugin_cfg(self::$appName);
