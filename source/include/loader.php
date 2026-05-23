@@ -2,6 +2,14 @@
 
 $plugin_path = __DIR__;
 
+# Others
+require_once $plugin_path . '/BackupHelper.php';
+require_once $plugin_path . '/ERHelper.php';
+require_once $plugin_path . '/ERSettings.php';
+require_once $plugin_path . '/FileUtils.php';
+require_once $plugin_path . '/Logger.php';
+require_once $plugin_path . '/LogHandler.php';
+
 # exceptions
 require_once $plugin_path . '/exceptions/RsyncFailureException.php';
 
@@ -23,12 +31,3 @@ require_once $plugin_path . '/sync_list/SyncStatus.php';
 # syncer
 require_once $plugin_path . '/syncer/RsyncSyncer.php';
 require_once $plugin_path . '/syncer/Syncer.php';
-
-# Others
-require_once $plugin_path . '/BackupHelper.php';
-require_once $plugin_path . '/ERHelper.php';
-require_once $plugin_path . '/ERSettings.php';
-require_once $plugin_path . '/FileUtils.php';
-require_once $plugin_path . '/http_handler.php';
-require_once $plugin_path . '/Logger.php';
-require_once $plugin_path . '/LogHandler.php';
