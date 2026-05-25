@@ -1,5 +1,11 @@
 {
     "require-dev": {
         "phpunit/phpunit": "^10"
+    },
+    "autoload": {
+        "classmap": ["source/include/"]
+    },
+    "scripts": {
+        "test": "phpunit"
     }
 }
