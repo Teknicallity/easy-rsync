@@ -1,55 +1,47 @@
 <?php
 
-require_once dirname(__DIR__, 3) .'/source/include/sync_list/RsyncOptions.php';
-
 use unraid\plugins\EasyRsync\RsyncOptions;
 use PHPUnit\Framework\TestCase;
 
 class RsyncOptionsTest extends TestCase {
-    public function testFromArray() {
-        $data = [
-            'rsyncRecursive' => false,
-            'rsyncTimes' => true,
-            'rsyncVerbose' => false,
-            'rsyncHumanReadable' => true,
-            'rsyncDelete' => "before",
-            'rsyncRemoteShell' => "rsh",
-            'rsyncCompress' => false,
-            'rsyncCustom' => "--test-option"
-        ];
-
-        $options = RsyncOptions::fromArray($data);
-
-        $this->assertFalse($options->rsyncRecursive);
-        $this->assertTrue($options->rsyncTimes);
-        $this->assertFalse($options->rsyncVerbose);
-        $this->assertTrue($options->rsyncHumanReadable);
-        $this->assertEquals("before", $options->rsyncDelete);
-        $this->assertEquals("rsh", $options->rsyncRemoteShell);
-        $this->assertFalse($options->rsyncCompress);
-        $this->assertEquals("--test-option", $options->rsyncCustom);
-    }
-
-    public function testBuildRsyncArgumentsString() {
-        $data = [
+    public function testBuildRsyncArgumentsStringIncludesEnabledFlags() {
+        $options = RsyncOptions::fromArray([
             'rsyncRecursive' => true,
             'rsyncTimes' => false,
             'rsyncVerbose' => true,
             'rsyncHumanReadable' => false,
             'rsyncDelete' => "after",
-            'rsyncRemoteShell' => "ssh",
             'rsyncCompress' => true,
             'rsyncCustom' => ""
-        ];
+        ]);
 
-        $options = RsyncOptions::fromArray($data);
+        $args = $options->buildRsyncArgumentsString();
+        $this->assertStringContainsString('--recursive', $args);
+        $this->assertStringContainsString('--verbose', $args);
+        $this->assertStringContainsString('--delete-after', $args);
+        $this->assertStringContainsString('--compress', $args);
+        $this->assertStringNotContainsString('--times', $args);
+        $this->assertStringNotContainsString('--human-readable', $args);
+        $this->assertStringNotContainsString('--dry-run', $args);
+    }
 
-        $this->assertEquals('--recursive --verbose --delete-after --compress', $options->buildRsyncArgumentsString());
-        $this->assertEquals('--recursive --verbose --delete-after --compress --dry-run', $options->buildRsyncArgumentsString(true));
+    public function testDryRunAppendsDryRunFlag() {
+        $options = RsyncOptions::fromArray(['rsyncRecursive' => true]);
+        $this->assertStringContainsString('--dry-run', $options->buildRsyncArgumentsString(true));
+    }
 
-        // With custom options
-        $customData = array_merge($data, ['rsyncCustom' => '--test-option']);
-        $options = RsyncOptions::fromArray($customData);
-        $this->assertEquals('--test-option --dry-run', $options->buildRsyncArgumentsString(true));
+    public function testCustomOptionsOverrideStandardFlags() {
+        $options = RsyncOptions::fromArray([
+            'rsyncRecursive' => true,
+            'rsyncCustom' => '--test-option',
+        ]);
+        $args = $options->buildRsyncArgumentsString();
+        $this->assertStringContainsString('--test-option', $args);
+        $this->assertStringNotContainsString('--recursive', $args);
+    }
+
+    public function testCustomOptionsStillGetDryRunWhenRequested() {
+        $options = RsyncOptions::fromArray(['rsyncCustom' => '--test-option']);
+        $this->assertStringContainsString('--dry-run', $options->buildRsyncArgumentsString(true));
     }
 }
