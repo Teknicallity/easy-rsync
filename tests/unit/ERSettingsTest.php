@@ -20,6 +20,25 @@ class ERSettingsTest extends TestCase {
         $this->assertSame(getenv('EASY_RSYNC_TEMP_DIR'), ERSettings::getTempDir());
     }
 
+    public function testSaveAndReadUserConfigRoundTripWithBetaAppName(): void {
+        $originalAppName = ERSettings::$appName;
+        try {
+            ERSettings::$appName = 'easy.rsync.beta';
+            ERSettings::saveUserConfig([
+                'notificationMode' => 'both',
+                'backupFrequency' => 'daily',
+                'frequencyHour' => '3',
+            ]);
+
+            $loaded = ERSettings::getUserConfig();
+            $this->assertSame('both', $loaded['notificationMode']);
+            $this->assertSame('daily', $loaded['backupFrequency']);
+            $this->assertSame('3', $loaded['frequencyHour']);
+        } finally {
+            ERSettings::$appName = $originalAppName;
+        }
+    }
+
     public function testSaveAndReadUserConfigRoundTrip(): void {
         $cfg = [
             'rsyncRecursive' => 'true',

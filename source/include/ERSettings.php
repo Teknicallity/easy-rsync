@@ -28,10 +28,17 @@ class ERSettings {
         return parse_plugin_cfg(self::$appName);
     }
 
+    /**
+     * Path to the persisted user config file. Must match the filename Unraid's
+     * parse_plugin_cfg() looks at: /boot/config/plugins/<plugin>/<plugin>.cfg.
+     */
+    public static function getUserConfigFilePath(): string {
+        return self::getConfigDir() . '/' . self::$appName . '.cfg';
+    }
+
     public static function saveUserConfig(array $userConfig): bool|int {
         $ini_contents = self::arrayToIni($userConfig);
-        $configFilePath = self::getConfigDir() .'/easy.rsync.cfg';
-        return file_put_contents($configFilePath, $ini_contents);
+        return file_put_contents(self::getUserConfigFilePath(), $ini_contents);
     }
 
     private static function arrayToIni(array $array): string {
