@@ -514,51 +514,10 @@ function bool_to_str($val): string {
             });
         });
 
+        let syncEntryIndex = <?= count($syncList->entries) ?>;
+
         $('#addSyncJobButton').on('click', function() {
             console.log('clicked addSyncJobButton');
-
-            let syncEntryIndex = <?= count($syncList->entries) ?>;
-
-            const xnewSyncEntry = `
-            <div class="sync-entry" data-index="${syncEntryIndex}">
-                <dl>
-                    <dt>Local Directories</dt>
-                    <dd>
-                        <div style="display: table; width: 300px;">
-                            <textarea id="sourceDirectories_${syncEntryIndex}"
-                                    name="sourceDirectories[]"
-                                    onfocus="$(this).next('.ft').slideDown('fast');"
-                                    style="resize: vertical; width: 400px;"
-                                    rows="3"></textarea>
-                            <div class="ft" style="display: none;">
-                                <div class="fileTreeDiv"></div>
-                                <button onclick="addSelectionToList(this);  return false;">Add to sources</button>
-                            </div>
-                        </div>
-                    </dd>
-                </dl>
-                <blockquote class='inline_help'>
-                    <p>Any local directories that should be backed up</p>
-                </blockquote>
-                <dl>
-                    <dt>Destination Hosts</dt>
-                    <dd>
-                        <textarea id="destinationHosts_${syncEntryIndex}"
-                                name="destinationHosts[]"
-                                style="resize: vertical; width: 400px;"
-                                rows="3"></textarea>
-                    </dd>
-                </dl>
-                <blockquote class='inline_help'>
-                    <p>Any remote host destinations that files will be copied to</p>
-                    <p>In the format: <code>[User@]Host:/Folder</code></p>
-                </blockquote>
-                <dl>
-                    <dt>&nbsp;</dt>
-                    <dd><button type="button" onclick="removeSyncEntry(this)">Remove</button></dd>
-                </dl>
-            </div>
-            `;
 
             const newSyncEntry =`
             <div class="sync-entry" data-entry-id="${syncEntryIndex}">
@@ -684,6 +643,8 @@ function bool_to_str($val): string {
             `;
 
                 $('#syncEntriesContainer').append(newSyncEntry);
+
+            updateSyncEntryRsyncOptions($('#syncEntriesContainer .sync-entry').last());
 
             // Reinitialize the file tree functionality for the new textarea
             $('#sourceDirectories_' + syncEntryIndex).next('.ft').find('.fileTreeDiv').fileTree({
