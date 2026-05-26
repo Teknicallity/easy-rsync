@@ -424,7 +424,7 @@ function bool_to_str($val): string {
             <dl>
                 <dt>&nbsp;</dt>
                 <dd>
-                    <button type="button" class="deleteSyncJobButton" onclick="removeSyncEntry(this)">Remove</button>
+                    <input type="button" class="deleteSyncJobButton" value="Remove" onclick="removeSyncEntry(this)"/>
                 </dd>
             </dl>
         </div>
@@ -636,7 +636,7 @@ function bool_to_str($val): string {
                 <dl>
                     <dt>&nbsp;</dt>
                     <dd>
-                        <button type="button" class="deleteSyncJobButton" onclick="removeSyncEntry(this)">Remove</button>
+                        <input type="button" class="deleteSyncJobButton" value="Remove" onclick="removeSyncEntry(this)"/>
                     </dd>
                 </dl>
             </div>
