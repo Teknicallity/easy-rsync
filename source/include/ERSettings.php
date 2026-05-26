@@ -112,27 +112,37 @@ class ERSettings {
         self::savePaths($paths);
     }
 
-    public static function updateCron(): array {
-        $cronContents = "# Easy Rsync cron settings" . PHP_EOL;
-        $userConfig = ERSettings::getUserConfig();
-        $cronContents .= match ($userConfig["backupFrequency"]) {
-            "custom" => $userConfig["frequencyCustom"],
-            "daily" => $userConfig["frequencyMinute"] ." ". $userConfig["frequencyHour"] ." * * *",
-            "weekly" => $userConfig["frequencyMinute"] ." ". $userConfig["frequencyHour"] ." * * ".  $userConfig["frequencyWeekday"],
-            "monthly" => $userConfig["frequencyMinute"] ." ". $userConfig["frequencyHour"] . " " .  $userConfig["frequencyDayOfMonth"] ." * *",
-            default => $cronContents = ''
+    public static function buildCronString(array $userConfig): ?string {
+        $frequency = $userConfig['backupFrequency'] ?? null;
+        $minute = $userConfig['frequencyMinute'] ?? '';
+        $hour = $userConfig['frequencyHour'] ?? '';
+
+        $schedule = match ($frequency) {
+            'custom'  => $userConfig['frequencyCustom'] ?? '',
+            'daily'   => "$minute $hour * * *",
+            'weekly'  => "$minute $hour * * " . ($userConfig['frequencyWeekday'] ?? ''),
+            'monthly' => "$minute $hour " . ($userConfig['frequencyDayOfMonth'] ?? '') . ' * *',
+            default   => null,
         };
 
+        return ($schedule === null || $schedule === '') ? null : $schedule;
+    }
+
+    public static function updateCron(): array {
+        $schedule = self::buildCronString(self::getUserConfig());
         $cronFilePath = self::getConfigDir() . '/' . self::getCronFileName();
-        if (!empty($cronContents)) {
-            $cronContents .= " php ". dirname(__DIR__) ."/scripts/rsync_backup.php > /dev/null 2>&1";
-            file_put_contents($cronFilePath, $cronContents . PHP_EOL . PHP_EOL);
+
+        if ($schedule !== null) {
+            $cronContents = "# Easy Rsync cron settings" . PHP_EOL
+                . $schedule . " php " . dirname(__DIR__) . "/scripts/rsync_backup.php > /dev/null 2>&1"
+                . PHP_EOL . PHP_EOL;
+            file_put_contents($cronFilePath, $cronContents);
         } elseif (file_exists($cronFilePath)) {
             unlink($cronFilePath);
         }
 
         $outString = $returnCode = 0;
-        exec("update_cron", $outString, $returnCode);
+        exec("update_cron 2>&1", $outString, $returnCode);
         return [$outString, $returnCode];
     }
 }
