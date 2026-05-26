@@ -32,7 +32,7 @@ class Logger {
     public static function getLogger(): Logger {
         if (self::$instance === null) {
             $userConfig = ERSettings::getUserConfig();
-            self::$instance = new Logger(loglevelString: $userConfig["logLevel"]);
+            self::$instance = new Logger(loglevelString: $userConfig["logLevel"] ?? null);
 
             $directory = ERSettings::getTempDir();
             if (!is_dir($directory)) {
