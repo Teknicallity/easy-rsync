@@ -111,6 +111,25 @@ function bool_to_str($val): string {
         margin-bottom: 0 !important;
     }
 
+    .remove-confirm {
+        padding: 10px 15px;
+        margin-top: 10px;
+        border: 1px solid #c44;
+        background: rgba(204, 68, 68, 0.08);
+        border-radius: 3px;
+        max-width: 400px;
+        box-sizing: border-box;
+    }
+
+    .remove-confirm p {
+        margin: 0 0 10px 0;
+    }
+
+    .confirmRemoveJobButton {
+        background-color: #c44 !important;
+        color: white !important;
+    }
+
     .tabs > .tab > .content {
         margin-top: 5rem;
     }
@@ -424,7 +443,12 @@ function bool_to_str($val): string {
             <dl>
                 <dt>&nbsp;</dt>
                 <dd>
-                    <input type="button" class="deleteSyncJobButton" value="Remove" onclick="removeSyncEntry(this)"/>
+                    <input type="button" class="deleteSyncJobButton" value="Remove" onclick="askRemoveSyncEntry(this, event)"/>
+                    <div class="remove-confirm" style="display:none;">
+                        <p>Remove this sync job? Files will not be deleted.</p>
+                        <input type="button" value="Cancel" onclick="cancelRemoveSyncEntry(this)"/>
+                        <input type="button" class="confirmRemoveJobButton" value="Remove Job" onclick="confirmRemoveSyncEntry(this)"/>
+                    </div>
                 </dd>
             </dl>
         </div>
@@ -479,6 +503,21 @@ function bool_to_str($val): string {
                     }
                 }
             });
+        });
+
+        $(document).on('keydown', function(event) {
+            if (event.key === 'Escape') {
+                $('.remove-confirm:visible').each(function() {
+                    cancelRemoveSyncEntry(this);
+                });
+            }
+        });
+
+        $(document).on('keydown keyup', function(event) {
+            $('.deleteSyncJobButton').val(event.shiftKey ? 'Remove (no confirm)' : 'Remove');
+        });
+        $(window).on('blur', function() {
+            $('.deleteSyncJobButton').val('Remove');
         });
 
         // Start manual backup
@@ -636,7 +675,12 @@ function bool_to_str($val): string {
                 <dl>
                     <dt>&nbsp;</dt>
                     <dd>
-                        <input type="button" class="deleteSyncJobButton" value="Remove" onclick="removeSyncEntry(this)"/>
+                        <input type="button" class="deleteSyncJobButton" value="Remove" onclick="askRemoveSyncEntry(this, event)"/>
+                        <div class="remove-confirm" style="display:none;">
+                            <p>Remove this sync job? Files will not be deleted.</p>
+                            <input type="button" value="Cancel" onclick="cancelRemoveSyncEntry(this)"/>
+                            <input type="button" class="confirmRemoveJobButton" value="Remove Job" onclick="confirmRemoveSyncEntry(this)"/>
+                        </div>
                     </dd>
                 </dl>
             </div>
@@ -741,7 +785,24 @@ function bool_to_str($val): string {
         }
     }
 
-    function removeSyncEntry(element) {
+    function askRemoveSyncEntry(element, event) {
+        if (event && event.shiftKey) {
+            confirmRemoveSyncEntry(element);
+            return;
+        }
+        const $entry = $(element).closest('.sync-entry');
+        $entry.find('.deleteSyncJobButton').hide();
+        $entry.find('.remove-confirm').slideDown('fast');
+    }
+
+    function cancelRemoveSyncEntry(element) {
+        const $entry = $(element).closest('.sync-entry');
+        $entry.find('.remove-confirm').slideUp('fast', function() {
+            $entry.find('.deleteSyncJobButton').show();
+        });
+    }
+
+    function confirmRemoveSyncEntry(element) {
         $(element).closest('.sync-entry').slideUp('fast', function() {
             $(this).remove();
         });
