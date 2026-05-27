@@ -3,14 +3,14 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync.beta">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2025.04.17a">
+  <!ENTITY version      "2026.05.26a">
   <!ENTITY gitBranch    "dev">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY pluginURL    "https://raw.githubusercontent.com/&gitUser;/&repoName;/&gitBranch;/&pluginName;.plg">
   <!ENTITY launch       "Settings/EasyRsync.Beta">
   <!ENTITY plugin       "/boot/config/plugins/&pluginName;">
   <!ENTITY emhttp       "/usr/local/emhttp/plugins/&pluginName;">
-  <!ENTITY md5          "1bded5233765d58a4c8eaa322e169e64">
+  <!ENTITY md5          "8f207e4018d0c04dc54dd5b559ece586">
 ]>
 <PLUGIN name="&pluginName;" 
         author="Teknicallity" 
@@ -22,6 +22,12 @@
 
 <CHANGES>
 ## &pluginName;
+
+### 2026.05.26
+- Inline confirmation when removing a sync job (Shift-click to skip)
+- Config changes in the beta version now persist after reload
+- All sync jobs added before pressing Save are saved (not just the last)
+- Remove button no longer stretches across the row
 
 ### 2025.04.17a
 - Initial Beta Release
