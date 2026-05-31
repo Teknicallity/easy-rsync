@@ -1,4 +1,8 @@
 
 /tmp
+/archive
 /.idea
 /backup_paths.json
+/vendor
+/.phpunit.cache
+/composer.lock

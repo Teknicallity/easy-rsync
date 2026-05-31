@@ -89,14 +89,14 @@ function handleGetAction(string $action): void {
     }
 }
 
-function sendError(string $error, int $code = 404): void {
+function sendError(string $error, int $code = 404): never {
     http_response_code($code); // Set the HTTP status code.
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode(['error' => $error]);
     exit();
 }
 
-function sendResponse(array $data, int $code = 200): void {
+function sendResponse(array $data, int $code = 200): never {
     http_response_code($code);
     header('Content-Type: application/json; charset=utf-8');
     echo json_encode($data);

@@ -2,29 +2,43 @@
 
 namespace unraid\plugins\EasyRsync;
 
-require_once "/usr/local/emhttp/plugins/dynamix/include/Wrappers.php";
+$docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
+
+require_once "$docroot/webGui/include/Wrappers.php";
 
 class ERSettings {
 
-    public static $appName = 'easy.rsync';
-    public static $configDir = '/boot/config/plugins/easy.rsync';
-    public static $pathsFile = 'backup_paths.json';
-    public static $cronFile = 'easy-rsync.cron';
-    public static $tempFolder = '/tmp/easy.rsync';
-    public static $logFile = 'easy-rsync.log';
-    public static $rsyncLogFile = 'rsync.log';
-    public static $stateRsyncRunningFile = 'running';
-    public static $stateRsyncAbortedFile = 'aborted';
-    public static $emhttpVars = '/var/local/emhttp/var.ini';
+    public static string $appName = 'easy.rsync';
+    private static string $pathsFileName = 'backup_paths.json';
+    private static string $logFileName = 'easy-rsync.log';
+    private static string $rsyncLogFileName = 'rsync.log';
+    private static string $stateRsyncRunningFileName = 'running';
+    private static string $stateRsyncAbortedFileName = 'aborted';
+    public static string $emhttpVars = '/var/local/emhttp/var.ini';
 
-    public static function getUserConfig() {
+    public static function getConfigDir() : string {
+        return getenv('EASY_RSYNC_CONFIG_DIR') ?: '/boot/config/plugins/' . self::$appName;
+    }
+    private static function getCronFileName() : string { return self::$appName . '.cron'; }
+    public static function getTempDir() : string {
+        return getenv('EASY_RSYNC_TEMP_DIR') ?: '/tmp/' . self::$appName;
+    }
+
+    public static function getUserConfig(): array{
         return parse_plugin_cfg(self::$appName);
     }
 
-    public static function saveUserConfig(array $userConfig) {
+    /**
+     * Path to the persisted user config file. Must match the filename Unraid's
+     * parse_plugin_cfg() looks at: /boot/config/plugins/<plugin>/<plugin>.cfg.
+     */
+    public static function getUserConfigFilePath(): string {
+        return self::getConfigDir() . '/' . self::$appName . '.cfg';
+    }
+
+    public static function saveUserConfig(array $userConfig): bool|int {
         $ini_contents = self::arrayToIni($userConfig);
-        $configFilePath = self::$configDir .'/easy.rsync.cfg';
-        return file_put_contents($configFilePath, $ini_contents);
+        return file_put_contents(self::getUserConfigFilePath(), $ini_contents);
     }
 
     private static function arrayToIni(array $array): string {
@@ -37,7 +51,7 @@ class ERSettings {
                 'boolean' => "$key=\"" . ($value ? 'true' : 'false') . "\"\n",
                 'integer' => "$key=$value\n",
                 'string'  => "$key=\"$value\"\n",
-                'array'   => "\n[$key]\n" . arrayToIni($value),
+                'array'   => "\n[$key]\n" . self::arrayToIni($value),
                 default   => "",
             };
         }
@@ -45,31 +59,31 @@ class ERSettings {
         return $iniContents;
     }
 
-    public static function getPathsJsonFilePath() {
-        return self::$configDir . '/' . self::$pathsFile;
+    public static function getPathsJsonFilePath(): string {
+        return self::getConfigDir() . '/' . self::$pathsFileName;
     }
     
-    public static function getLogFilePath() {
-        return self::$tempFolder . '/' . self::$logFile;
+    public static function getLogFilePath(): string {
+        return self::getTempDir() . '/' . self::$logFileName;
     }
 
-    public static function getRsyncLogFilePath() {
-        return self::$tempFolder . '/' . self::$rsyncLogFile;
+    public static function getRsyncLogFilePath(): string {
+        return self::getTempDir() . '/' . self::$rsyncLogFileName;
     }
 
-    public static function getStateRsyncRunningFilePath() {
-        return self::$tempFolder . '/' . self::$stateRsyncRunningFile;
+    public static function getStateRsyncRunningFilePath(): string {
+        return self::getTempDir() . '/' . self::$stateRsyncRunningFileName;
     }
 
-    public static function getStateRsyncAbortedFilePath() {
-        return self::$tempFolder . '/' . self::$stateRsyncAbortedFile;
+    public static function getStateRsyncAbortedFilePath(): string {
+        return self::getTempDir() . '/' . self::$stateRsyncAbortedFileName;
     }
 
-    private static function savePaths(array $paths) {
+    private static function savePaths(array $paths): bool|int {
         return file_put_contents(self::getPathsJsonFilePath(), json_encode($paths, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     }
 
-    public static function getPaths() {
+    public static function getPaths(): array {
         $filePath = self::getPathsJsonFilePath();
         
         if (file_exists($filePath)) {
@@ -85,7 +99,7 @@ class ERSettings {
         ];
     }
 
-    public static function saveSourcesAndDestinations(array $sources = null, array $destinations = null) {
+    public static function saveSourcesAndDestinations(array $sources = null, array $destinations = null): void {
         if (empty($sources) && empty($destinations)) {
             return;
         }
@@ -103,5 +117,39 @@ class ERSettings {
         }
     
         self::savePaths($paths);
+    }
+
+    public static function buildCronString(array $userConfig): ?string {
+        $frequency = $userConfig['backupFrequency'] ?? null;
+        $minute = $userConfig['frequencyMinute'] ?? '';
+        $hour = $userConfig['frequencyHour'] ?? '';
+
+        $schedule = match ($frequency) {
+            'custom'  => $userConfig['frequencyCustom'] ?? '',
+            'daily'   => "$minute $hour * * *",
+            'weekly'  => "$minute $hour * * " . ($userConfig['frequencyWeekday'] ?? ''),
+            'monthly' => "$minute $hour " . ($userConfig['frequencyDayOfMonth'] ?? '') . ' * *',
+            default   => null,
+        };
+
+        return ($schedule === null || $schedule === '') ? null : $schedule;
+    }
+
+    public static function updateCron(): array {
+        $schedule = self::buildCronString(self::getUserConfig());
+        $cronFilePath = self::getConfigDir() . '/' . self::getCronFileName();
+
+        if ($schedule !== null) {
+            $cronContents = "# Easy Rsync cron settings" . PHP_EOL
+                . $schedule . " php " . dirname(__DIR__) . "/scripts/rsync_backup.php > /dev/null 2>&1"
+                . PHP_EOL . PHP_EOL;
+            file_put_contents($cronFilePath, $cronContents);
+        } elseif (file_exists($cronFilePath)) {
+            unlink($cronFilePath);
+        }
+
+        $outString = $returnCode = 0;
+        exec("update_cron 2>&1", $outString, $returnCode);
+        return [$outString, $returnCode];
     }
 }

@@ -1,24 +1,29 @@
 <?php
 
+namespace unraid\plugins\EasyRsync;
+
 require_once dirname(__DIR__) ."/include/BackupHelper.php";
 require_once dirname(__DIR__) ."/include/ERHelper.php";
 require_once dirname(__DIR__) ."/include/ERSettings.php";
 require_once dirname(__DIR__) ."/include/Logger.php";
-require_once dirname(__DIR__) ."/include/NotificationService.php";
+require_once dirname(__DIR__) ."/include/notifications/Notification.php";
+require_once dirname(__DIR__) ."/include/notifications/NotificationLevel.php";
+require_once dirname(__DIR__) ."/include/paths/Destination.php";
+require_once dirname(__DIR__) ."/include/paths/PathHelper.php";
+require_once dirname(__DIR__) ."/include/sync_list/RsyncOptions.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncEntry.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncList.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncResult.php";
+require_once dirname(__DIR__) ."/include/sync_list/SyncStatus.php";
+require_once dirname(__DIR__) ."/include/syncer/RsyncSyncer.php";
 
-use unraid\plugins\EasyRsync\BackupHelper;
-use unraid\plugins\EasyRsync\ERHelper;
-use unraid\plugins\EasyRsync\ERSettings;
-use unraid\plugins\EasyRsync\Logger;
-use unraid\plugins\EasyRsync\LogLevel;
-use unraid\plugins\EasyRsync\NotificationService;
+use DateTime;
 
 $userConfig = ERSettings::getUserConfig();
 
-$logger = new Logger(loglevelString: $userConfig["logLevel"]);
+$logger = Logger::getLogger();
 
-$shortopts = "";
-$shortopts .= "n";
+$shortopts = "n";
 
 $longopts = array(
     "dry-run",
@@ -28,132 +33,160 @@ $options = getopt($shortopts, $longopts);
 
 $dryRunMode = isset($options['n']) || isset($options['dry-run']);
 
+$useEmojis = true;
 
 $backupStartedTime = new DateTime();
-$logger->logDebug('Backup script called'. $backupStartedTime->format('c'));
+$logger->debug('Backup script called'. $backupStartedTime->format('c'));
 
 if (ERHelper::isBackupRunning()) {
-    NotificationService::notify("Easy Rsync", "Backup Running");
-    $logger->logWarning("Backup already running. Cannot start new backup");
+    Notification::simpleNotify("Sync Already Running", "Cannot start another sync operation. Sync is still running.");
+    $logger->warning("Backup already running. Cannot start new backup");
     exit();
 }
-$logger->logDebug("Backup is not already running");
+$logger->debug("Backup is not already running");
 
 // if tempfolder exists, remove all logs
-if (file_exists(ERSettings::$tempFolder)) {
-    exec("rm " . ERSettings::$tempFolder . '/*.log');
-    $logger->logInfo("Removing previous logs");
+if (file_exists(ERSettings::getTempDir())) {
+    exec("rm " . ERSettings::getTempDir() . '/*.log');
+    $logger->info("Removing previous logs");
 }
 
 // Remove dangling abort status
 $abortFilePath = ERSettings::getStateRsyncAbortedFilePath();
 if (file_exists($abortFilePath)) {
-    $logger->logInfo("Removing previous aborted status");
+    $logger->info("Removing previous aborted status");
     unlink($abortFilePath);
 }
 
-$logger->logInfo("Saving process id". (string) getmypid());
+$logger->info("Saving process id". (string) getmypid());
 file_put_contents(ERSettings::getStateRsyncRunningFilePath(), getmypid());
 
 // initial log message
-$logger->logInfo('Welcome test message');
+$logger->info('Welcome test message');
 
 // check if array is online
 if (!ERHelper::isArrayOnline()) {
-    $logger->logError('Array is not online.');
-    NotificationService::notify('EasyRsync: Array is not online', 'Cannot sync. Array is not running.');
+    $logger->error('Array is not online.');
+    Notification::simpleNotify('Array is not online', 'Cannot sync. Array is not running.');
     exit();
 }
-$logger->logDebug('Array is online');
+$logger->debug('Array is online');
 
 // check if config file exists
 if (!file_exists(ERSettings::getPathsJsonFilePath())) {
-    $logger->logError('Cannot find path list config file to read from.');
-    cleanup(failure: true);
-}
-$logger->logDebug('Paths list file exists');
-
-// Parse paths
-$paths = ERSettings::getPaths();
-$logger->logInfo('Successfully parsed paths');
-
-// Ensure paths are present
-$sources = $paths['sources'];
-$logger->logDebug("'". implode(',', $sources) ."'");
-if (empty($sources)) {
-    $logger->logError('At least one source for backup is needed');
-    cleanup(failure: true);
-}
-$destinations = $paths['destinations'];
-$logger->logDebug("'". implode(',', $destinations) ."'");
-if (empty($destinations)) {
-    $logger->logError('At least one destination is needed');
-    cleanup(failure: true);
-}
-
-//Summary map for storing final log/notifier messages for each source and or destination
-
-$rsyncOptions = BackupHelper::buildRsyncOptions(doDryRun: $dryRunMode);
-$logger->logDebug($rsyncOptions);
-//Test all sources and destinations
-
-foreach ($sources as $source) {
-    foreach ($destinations as $destination) {
-        if (ERHelper::isAbortRequested()) {
-            handleAbort();
-        }
-        // Construct and execute the rsync command.
-        $command = "rsync $rsyncOptions '$source' '$destination' --log-file='" . ERSettings::getRsyncLogFilePath() . "'";
-        $logger->logInfo("Current command: $command");
-        exec($command, $output, $return_var);
-        
-        if ($return_var !== 0) {
-            $logger->logError("Failed to sync '$source' with '$destination'. Check Rsync Log.");
-        } else {
-            $logger->logInfo("Successfully synced '$source' with '$destination'.");
-        }
-    }
-}
-handleEnd();
-
-
-function handleAbort(): never {
-    global $logger;
-    NotificationService::notify("Easy Rsync", "Sync Aborted", "The sync operation was aborted");
-    $logger->logWarning("Sync aborted");
-    // which sources were synced until which destinations?
-    cleanup(failure: true);
-}
-
-function handleEnd(): never {
-    global $logger;
-    $backupFinishedTime = new DateTime();
-    global $backupStartedTime;
-    $backupTime = $backupStartedTime->diff($backupFinishedTime);
-    $backupDuration = $backupTime->format('%H:%I:%S');
-
-    NotificationService::notify("Easy Rsync", "Sync completed in $backupDuration","");
-    $logger->logInfo("Finished syncing in $backupDuration");
+    $logger->error('Cannot find path list config file to read from.');
     cleanup();
+    exit();
+}
+$logger->debug('Paths list file exists');
+
+// Get user defined synclist
+$syncList = SyncList::fromFile();
+$logger->info('Successfully parsed paths');
+
+// Todo ensure no paths are empty
+
+$notification = new Notification(
+    "Sync started",
+    "Sync started at " . $backupStartedTime->format("Y/m/d H:i:s"),
+    level: NotificationLevel::NORMAL
+);
+$notification->send();
+
+$syncList->syncer = new RsyncSyncer();
+$syncList->syncAll(doDryRun: $dryRunMode);
+
+handleFinalSummary($syncList, $useEmojis);
+
+function handleFinalSummary(SyncList $syncList, bool $useEmojis): never {
+    global $logger, $backupStartedTime, $userConfig;
+
+    $backupFinishedTime = new DateTime();
+    $backupTime = $backupStartedTime->diff($backupFinishedTime);
+    $duration = $backupTime->format('%H:%I:%S');
+
+    $subject = match ($syncList->finalStatus) {
+        SyncStatus::Success => "Sync Completed",
+        SyncStatus::Failed => "Sync Completed with Errors",
+        SyncStatus::Skipped => "Sync Aborted",
+    };
+
+    $doSummaryNotification = $userConfig["notificationMode"] === "both" || $userConfig["notificationMode"] === "summary";
+    if ($doSummaryNotification) {
+        $notificationLevel = match ($syncList->finalStatus) {
+            SyncStatus::Success => NotificationLevel::NORMAL,
+            SyncStatus::Failed => NotificationLevel::ALERT,
+            SyncStatus::Skipped => NotificationLevel::WARNING,
+        };
+
+        $notification = new Notification(
+            $subject,
+            "Completed in $duration",
+            message: $syncList->generateSummaryMessage($useEmojis),
+            level: $notificationLevel
+        );
+
+        $notification->send();
+    }
+
+    $logMessage = $subject . ". Took " . $duration;
+    switch ($syncList->finalStatus) {
+        case SyncStatus::Failed:
+            $logger->error($logMessage);
+            break;
+        case SyncStatus::Skipped:
+            $logger->warning($logMessage);
+            break;
+        default:
+            $logger->info($logMessage);
+    }
+
+    cleanup();
+    exit($syncList->finalStatus == SyncStatus::Success ? 0 : 1);
 }
 
-function cleanup(bool $failure = false): never {
+function cleanup(): void {
     global $logger;
-    $logger->logInfo("Cleaning up");
+
+    $logger->info("Cleaning up");
+
     if (file_exists(ERSettings::getStateRsyncAbortedFilePath())) {
         unlink(ERSettings::getStateRsyncAbortedFilePath());
-        $logger->logDebug("Removed abort status file");
+        $logger->debug("Removed abort status file");
     }
-    
-    unlink(ERSettings::getStateRsyncRunningFilePath());
-    $logger->logDebug("Remove running status file");
-    
 
-    if ($failure) {
-        $logger->logWarning("Something went wrong");
-        exit(1);
+    if (file_exists(ERSettings::getStateRsyncRunningFilePath())) {
+        unlink(ERSettings::getStateRsyncRunningFilePath());
+        $logger->debug("Removed running status file");
+    }
+
+    $logger->info("Cleanup complete");
+}
+
+function shortenSourcePath(string $source): string {
+    $maxLength = 26;
+    if (strlen($source) > $maxLength) {
+        $sourceParts = PathHelper::extractPathComponents($source);
+        $lastComponent = end($sourceParts);
+
+        if (strlen($lastComponent) > $maxLength) {
+            $sourcePathEnd = substr($lastComponent, 0, $maxLength - 3) . '...';
+        } else {
+            $sourcePathEnd = $lastComponent;
+        }
     } else {
-        $logger->logInfo("Finished syncing");
-        exit(0);
-    };
+        $sourcePathEnd = $source;
+    }
+    return $sourcePathEnd;
+}
+
+function shortenDestinationPath(string $destination): string {
+    $maxLength = 26;
+    $hostAndPath = (new Destination($destination))->hostAndPath();
+
+    if (strlen($hostAndPath) > $maxLength) {
+        return substr($hostAndPath, 0, $maxLength - 3) . '...';
+    }
+
+    return $hostAndPath;
 }

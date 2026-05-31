@@ -1,9 +1,9 @@
 <?php
+
 namespace unraid\plugins\EasyRsync;
 
 require_once __DIR__ ."/LogHandler.php";
-
-use unraid\plugins\EasyRsync\LogHandler;
+require_once __DIR__ ."/ERSettings.php";
 
 enum LogLevel: int {
     case DEBUG = 0;
@@ -13,42 +13,58 @@ enum LogLevel: int {
 }
 
 class Logger {
-    private $logLevel;
+    private static ?Logger $instance = null;
+    private LogLevel $logLevel;
 
-    public function __construct(LogLevel $logLevel = LogLevel::INFO, String $loglevelString = null) {
+    private function __construct(LogLevel $logLevel = LogLevel::INFO, ?string $loglevelString = null) {
         $this->logLevel = $logLevel;
 
         if ($loglevelString !== null) {
             $this->logLevel = match (strtolower($loglevelString)) {
                 "debug" => LogLevel::DEBUG,
-                "info "=> LogLevel::INFO,
                 "error" => LogLevel::ERROR,
                 "warning" => LogLevel::WARNING,
                 default => LogLevel::INFO,
             };
         }
-
     }
 
-    public function logDebug(string $message): void {
+    public static function getLogger(): Logger {
+        if (self::$instance === null) {
+            $userConfig = ERSettings::getUserConfig();
+            self::$instance = new Logger(loglevelString: $userConfig["logLevel"] ?? null);
+
+            $directory = ERSettings::getTempDir();
+            if (!is_dir($directory)) {
+                mkdir($directory, 0755, true);
+            }
+        }
+        return self::$instance;
+    }
+
+    public static function resetInstance(): void {
+        self::$instance = null;
+    }
+
+    public function debug(string $message): void {
         if ($this->logLevel->value <= LogLevel::DEBUG->value) {
             LogHandler::writeToPluginLog("[Debug] " . $message);
         }
     }
 
-    public function logInfo(string $message): void {
+    public function info(string $message): void {
         if ($this->logLevel->value <= LogLevel::INFO->value) {
             LogHandler::writeToPluginLog("[Info] " . $message);
         }
     }
 
-    public function logWarning(string $message): void {
+    public function warning(string $message): void {
         if ($this->logLevel->value <= LogLevel::WARNING->value) {
             LogHandler::writeToPluginLog("[Warning] " . $message);
         }
     }
 
-    public function logError(string $message): void {
+    public function error(string $message): void {
         if ($this->logLevel->value <= LogLevel::ERROR->value) {
             LogHandler::writeToPluginLog("[Error] " . $message);
         }

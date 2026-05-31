@@ -1,4 +1,7 @@
 <?php
+
+namespace unraid\plugins\EasyRsync;
+
 // Set document root for Unraid environment.
 $docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
 // Include Unraid's GUI helper functions.
@@ -7,12 +10,12 @@ require_once "$docroot/webGui/include/Helpers.php";
 
 require_once dirname(__DIR__) . "/include/ERSettings.php";
 
-use unraid\plugins\EasyRsync\ERSettings;
-
 ?>
 
 <h3>The backup is <span id="backupStatusTextRsync" class="backupStatusText"></span>.</h3>
 <div style='border: 1px solid red; height:500px; overflow:auto;' id='rsyngLogFrame'>Loading...</div>
+<button class="manualBackupButton">Manual Backup</button>
+<button class="manualDryBackupButton">Manual Dry Backup</button>
 <input type='button' class="abortBtn" value='Abort' disabled/>
 
 <script>

@@ -1,17 +1,17 @@
 <?xml version="1.0" standalone="yes"?>
 <!DOCTYPE PLUGIN [
   <!ENTITY repoName     "easy-rsync">
-  <!ENTITY pluginName   "easy.rsync">
+  <!ENTITY pluginName   "easy.rsync.beta">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2025.02.20">
-  <!ENTITY gitBranch    "main">
+  <!ENTITY version      "2026.05.30a">
+  <!ENTITY gitBranch    "dev">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY releaseLocation "https://github.com/&gitUser;/&repoName;/releases/download/&version;">
   <!ENTITY pluginURL    "https://raw.githubusercontent.com/&gitUser;/&repoName;/&gitBranch;/&pluginName;.plg">
-  <!ENTITY launch       "Settings/EasyRsync">
+  <!ENTITY launch       "Settings/EasyRsync.Beta">
   <!ENTITY plugin       "/boot/config/plugins/&pluginName;">
   <!ENTITY emhttp       "/usr/local/emhttp/plugins/&pluginName;">
-  <!ENTITY md5          "f998d084fb468a2b33ba29abcaa140e0">
+  <!ENTITY md5          "79979bba03b06aed614115ba959eabe4">
 ]>
 <PLUGIN name="&pluginName;" 
         author="Teknicallity" 
@@ -23,6 +23,15 @@
 
 <CHANGES>
 ## &pluginName;
+
+### 2026.05.26
+- Inline confirmation when removing a sync job (Shift-click to skip)
+- Config changes in the beta version now persist after reload
+- All sync jobs added before pressing Save are saved (not just the last)
+- Remove button no longer stretches across the row
+
+### 2025.04.17a
+- Initial Beta Release
 
 ### 2025.02.16
 - Logs display in separate tabs
@@ -60,7 +69,7 @@ echo "Removed old packages."
 <!--create plugin README.md file-->
 <FILE Name="&emhttp;/README.md">
 <INLINE>
-**Easy Rsync**
+**Easy Rsync Beta**
 
 Backup specified shares to a remote location using rsync.
 </INLINE>
@@ -69,29 +78,21 @@ Backup specified shares to a remote location using rsync.
 <!--Additional echo text-->
 <FILE Run="/bin/bash">
 <INLINE>
-echo "enabled"
-
-#Check if Kernel Module is already enabled
-
 echo
-echo "----Installation of Intel GPU TOP complete-----"
+echo "Installation Complete"
 </INLINE>
 </FILE>
 
 <!--The 'remove' script.-->
 <FILE Run="/bin/bash" Method="remove">
 <INLINE>
-echo "-----------------------------------------------"
-echo "----------Uninstalling Intel GPU TOP-----------"
-echo "-----------------------------------------------"
+echo "Uninstalling"
 # Remove plugin related files
 removepkg &pluginName;-&version;
 rm -rf &emhttp;
 rm -rf &plugin;
 echo
-echo "-----------------------------------------------"
-echo "---Uninstallation of Intel GPU TOP complete!---"
-echo "-----------------------------------------------"
+echo "Uninstallation Complete!"
 echo
 </INLINE>
 </FILE>
