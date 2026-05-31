@@ -3,14 +3,15 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync.beta">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2026.05.26a">
+  <!ENTITY version      "2026.05.30a">
   <!ENTITY gitBranch    "dev">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
+  <!ENTITY releaseLocation "https://github.com/&gitUser;/&repoName;/releases/download/&version;">
   <!ENTITY pluginURL    "https://raw.githubusercontent.com/&gitUser;/&repoName;/&gitBranch;/&pluginName;.plg">
   <!ENTITY launch       "Settings/EasyRsync.Beta">
   <!ENTITY plugin       "/boot/config/plugins/&pluginName;">
   <!ENTITY emhttp       "/usr/local/emhttp/plugins/&pluginName;">
-  <!ENTITY md5          "8f207e4018d0c04dc54dd5b559ece586">
+  <!ENTITY md5          "79979bba03b06aed614115ba959eabe4">
 ]>
 <PLUGIN name="&pluginName;" 
         author="Teknicallity" 
@@ -61,7 +62,7 @@ echo "Removed old packages."
 
 <!--The install script.-->
 <FILE Name="/boot/config/plugins/&pluginName;/&pluginName;-&version;.txz" Run="upgradepkg --install-new">
-<URL>&repoLocation;/archive/&pluginName;-&version;.txz</URL>
+<URL>&releaseLocation;/&pluginName;-&version;.txz</URL>
 <MD5>&md5;</MD5>
 </FILE>
 
