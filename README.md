@@ -16,13 +16,13 @@ A web-based UI for configuring and running rsync backups on Unraid. Set up sourc
 Build a beta package and ship it to your Unraid server:
 
 ```bash
-sudo ./pkg_build.sh -b -u root@<unraid-host> -y -v a
+sudo ./pkg_build.sh -b -u root@<unraid-host> -y -v .b1
 ```
 
 - `-b` builds a beta (installs alongside any stable version).
 - `-u root@<unraid-host>` targets your Unraid box. Requires key-based root SSH.
 - `-y` skips confirmation prompts.
-- `-v a` is the version suffix; the full version becomes `YYYY.MM.DD<suffix>` (e.g. `2026.05.25a`).
+- `-v .b1` is the version suffix; the full version becomes `YYYY.MM.DD<suffix>` (e.g. `2026.05.25.b1`). Beta builds must use a `.bN` suffix; a plain letter (e.g. `a`) is the *stable* format and is rejected with `-b`.
 
 ### Installing on the Unraid box
 
@@ -32,3 +32,7 @@ After the script finishes, SSH into the Unraid server or use the web UI:
 2. **CLI:** `plugin install /boot/easy.rsync.beta.plg`
 
 The plugin appears under Settings -> Easy Rsync (Beta).
+
+## Releasing
+
+Ready to deploy a stable or beta release? See [RELEASING.md](RELEASING.md).
