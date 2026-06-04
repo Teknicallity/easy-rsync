@@ -17,8 +17,9 @@
         author="Teknicallity" 
         version="&version;" 
         launch="&launch;" 
-        pluginURL="&pluginURL;" 
-        min="6.9.0" 
+        pluginURL="&pluginURL;"
+        icon="superpowers"
+        min="6.9.0"
         support="http://forums.unraid.net/index.php?topic=36543.0">
 
 <CHANGES>
