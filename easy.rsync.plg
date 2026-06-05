@@ -3,7 +3,7 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2025.02.20">
+  <!ENTITY version      "2026.06.04">
   <!ENTITY gitBranch    "main">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY releaseLocation "https://github.com/&gitUser;/&repoName;/releases/download/&version;">
@@ -20,16 +20,13 @@
         pluginURL="&pluginURL;"
         icon="superpowers"
         min="6.9.0"
-        support="http://forums.unraid.net/index.php?topic=36543.0">
+        support="https://forums.unraid.net/topic/199267-plugin-easy-rsync/">
 
 <CHANGES>
 ## &pluginName;
 
-### 2025.02.16
-- Logs display in separate tabs
-
-### 2025.02.02
-- Initial commit
+### 2026.06.04
+- Initial stable release.
 
 </CHANGES>
 
