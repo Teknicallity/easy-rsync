@@ -57,9 +57,12 @@ break same-day ties in order: `2026.05.30` < `2026.05.30a` < `2026.05.30b`, and
 
 ## Cutting a release
 
-Pre-req: the commit you want to ship is already on the correct branch -- **stable on
-`main`, beta on `dev`**. The workflow enforces this (it fails if the tag commit is
-not reachable from the expected branch).
+Pre-reqs:
+
+- `composer test` passes locally (see [README.md#tests](README.md#tests)).
+- The commit you want to ship is already on the correct branch -- **stable on `main`,
+  beta on `dev`**. The workflow enforces this (it fails if the tag commit is not
+  reachable from the expected branch).
 
 ### Stable
 

@@ -33,6 +33,24 @@ After the script finishes, SSH into the Unraid server or use the web UI:
 
 The plugin appears under Settings -> Easy Rsync (Beta).
 
+## Tests
+
+PHPUnit suite under `tests/`.
+
+First-time setup (or after deleting `vendor/`):
+
+```bash
+composer install
+```
+
+Run the suite:
+
+```bash
+composer test
+```
+
+Equivalent to `./vendor/bin/phpunit`.
+
 ## Releasing
 
 Ready to deploy a stable or beta release? See [RELEASING.md](RELEASING.md).
