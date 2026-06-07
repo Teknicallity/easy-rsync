@@ -686,19 +686,16 @@ function bool_to_str($val): string {
             </div>
             `;
 
-                $('#syncEntriesContainer').append(newSyncEntry);
+            $('#syncEntriesContainer').append(newSyncEntry);
 
-            updateSyncEntryRsyncOptions($('#syncEntriesContainer .sync-entry').last());
-
-            // Reinitialize the file tree functionality for the new textarea
-            $('#sourceDirectories_' + syncEntryIndex).next('.ft').find('.fileTreeDiv').fileTree({
+            const $newEntry = $('#syncEntriesContainer .sync-entry').last();
+            updateSyncEntryRsyncOptions($newEntry);
+            $newEntry.find('.fileTreeDiv').fileTree({
                 root: '/mnt/',
                 top: '/mnt/',
                 filter: '',
                 multiSelect: true,
                 allowBrowsing: true
-            }, function(file) {
-                $('#sourceDirectories_' + syncEntryIndex).val(file).trigger('change');
             });
 
             syncEntryIndex++;
