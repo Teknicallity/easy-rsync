@@ -3,7 +3,7 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync.beta">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2026.05.30a">
+  <!ENTITY version      "2026.06.07.b1">
   <!ENTITY gitBranch    "dev">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY releaseLocation "https://github.com/&gitUser;/&repoName;/releases/download/&version;">
@@ -24,6 +24,11 @@
 
 <CHANGES>
 ## &pluginName;
+
+### 2026.06.07.b1
+- Improve installation log
+- Fix directory picker and help text in new sync entries
+- Remove trailing slash from Unraid directory picker to improve rsync behavior
 
 ### 2026.05.26
 - Inline confirmation when removing a sync job (Shift-click to skip)
