@@ -717,7 +717,9 @@ function bool_to_str($val): string {
         if ($el.length !== 0) {
             let checked = $el
                 .map(function () {
-                    return $(this).parent().find('a:first').attr('rel');
+                    const rel = $(this).parent().find('a:first').attr('rel');
+                    // Strip trailing slashes so rsync copies the directory itself, not its contents.
+                    return rel.length > 1 ? rel.replace(/\/+$/, '') : rel;
                 })
                 .get()
                 .join('\n');
