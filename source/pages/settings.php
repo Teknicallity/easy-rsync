@@ -138,7 +138,7 @@ function bool_to_str($val): string {
 
 <form id="erSettingsForm" method="post">
     <div class="title">
-        <div style="display: flex; justify-content: space-between">
+        <div style="display: flex; justify-content: space-between; width: 100%">
             <span>General Settings</span>
             <div>
                 <span>Status: </span>
