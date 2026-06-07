@@ -67,29 +67,21 @@ Backup specified shares to a remote location using rsync.
 <!--Additional echo text-->
 <FILE Run="/bin/bash">
 <INLINE>
-echo "enabled"
-
-#Check if Kernel Module is already enabled
-
 echo
-echo "----Installation of Intel GPU TOP complete-----"
+echo "Installation Complete"
 </INLINE>
 </FILE>
 
 <!--The 'remove' script.-->
 <FILE Run="/bin/bash" Method="remove">
 <INLINE>
-echo "-----------------------------------------------"
-echo "----------Uninstalling Intel GPU TOP-----------"
-echo "-----------------------------------------------"
+echo "Uninstalling"
 # Remove plugin related files
 removepkg &pluginName;-&version;
 rm -rf &emhttp;
 rm -rf &plugin;
 echo
-echo "-----------------------------------------------"
-echo "---Uninstallation of Intel GPU TOP complete!---"
-echo "-----------------------------------------------"
+echo "Uninstallation Complete!"
 echo
 </INLINE>
 </FILE>
