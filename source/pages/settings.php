@@ -157,7 +157,8 @@ function bool_to_str($val): string {
         </dd>
     </dl>
     <blockquote class="inline_help">
-        Whether to use the existing file datetimes or ignore and apply current time.
+        <p>Preserves source modification times on the destination. Rsync flag: <code>--times</code>.</p>
+        <p>If disabled, copied files get the current time as their modified date.</p>
     </blockquote>
     
     <dl>
@@ -176,7 +177,8 @@ function bool_to_str($val): string {
         </dd>
     </dl>
     <blockquote class="inline_help">
-        When should RSync delete files in destination directory to mirror source.
+        <p>Removes files from the destination that no longer exist in the source, so the destination mirrors the source. Maps to rsync's <code>--delete-after</code>, <code>--delete-before</code>, <code>--delete-during</code>, or <code>--delete-delay</code>.</p>
+        <p><strong>After</strong> is safest: deletions only happen if transfers succeeded.</p>
     </blockquote>
     
     <dl>
@@ -189,7 +191,8 @@ function bool_to_str($val): string {
         </dd>
     </dl>
     <blockquote class="inline_help">
-        Should Rsync compress the files before transfer, and decompress on destination host.
+        <p>Compresses files during transfer. Rsync flag: <code>--compress</code>.</p>
+        <p>Saves bandwidth on slow or remote links. Rarely worth the CPU cost for local-to-local syncs or already-compressed files (mp4, zip, etc.).</p>
     </blockquote>
 
     <dl>
@@ -200,6 +203,10 @@ function bool_to_str($val): string {
                    placeholder="Will override other Rsync options">
         </dd>
     </dl>
+    <blockquote class="inline_help">
+        <p>Free-form rsync flags. When set, replaces the structured options above.</p>
+        <p>Example: <code>-avh --exclude=node_modules</code></p>
+    </blockquote>
 
     <dl>
         <dt>Easy Rsync Log Level</dt>
@@ -213,7 +220,8 @@ function bool_to_str($val): string {
         </dd>
     </dl>
     <blockquote class="inline_help">
-        Set the log level for the plugin log. Recommended to keep on Info.
+        <p>Controls how verbose the plugin's own log is (the Status Log tab).</p>
+        <p><strong>Debug</strong>: everything including internal trace messages. <strong>Info</strong>: normal operation (recommended). <strong>Warning</strong>: only warnings and errors. <strong>Error</strong>: errors only.</p>
     </blockquote>
 
     <div class="title">
@@ -231,7 +239,8 @@ function bool_to_str($val): string {
         </dd>
     </dl>
     <blockquote class="inline_help">
-        Choose when you want to receive notifications about your sync activity.
+        <p>Where notifications appear in Unraid's notification panel (top-right bell icon).</p>
+        <p><strong>None</strong>: no notifications. <strong>After Each Sync</strong>: one per sync entry as it finishes. <strong>Summary</strong>: a single notification after all sync entries complete. <strong>Both</strong>: per-entry and a final summary.</p>
     </blockquote>
 
     <dl>
@@ -316,7 +325,8 @@ function bool_to_str($val): string {
         </dd>
     </dl>
     <blockquote class="inline_help">
-        Set the custom frequency in cronjob format.
+        <p>Cron expression with five fields: <code>minute hour day-of-month month day-of-week</code>.</p>
+        <p>Examples: <code>0 3 * * *</code> (daily at 3:00am), <code>*/15 * * * *</code> (every 15 minutes), <code>0 2 * * 0</code> (Sundays at 2:00am).</p>
     </blockquote>
 
     <div class="title">
@@ -341,7 +351,10 @@ function bool_to_str($val): string {
                 </dd>
             </dl>
             <blockquote class='inline_help'>
-                <p>Any local directories that should be backed up</p>
+                <p>Local paths to back up. One per line. Files or directories under <code>/mnt/</code>.</p>
+                <p><strong>Trailing slash matters in rsync.</strong></p>
+                <p><code>/mnt/user/Docs</code> copies the <code>Docs</code> folder itself. The destination gets a <code>Docs/</code> subdirectory.</p>
+                <p><code>/mnt/user/Docs/</code> copies only its contents. Files land directly in the destination, no <code>Docs/</code> wrapper.</p>
             </blockquote>
 
             <dl>
@@ -359,8 +372,9 @@ function bool_to_str($val): string {
                 </dd>
             </dl>
             <blockquote class='inline_help'>
-                <p>Any remote host destinations that files will be copied to</p>
-                <p>In the format: <code>[User@]Host:/Folder</code></p>
+                <p>Where to copy the sources. One per line. Every source is copied to every destination.</p>
+                <p>Remote: <code>[user@]host:/path</code>. For example, <code>backup@nas:/srv/backups</code>. SSH key auth must be set up from this Unraid box to the remote host (no password prompts).</p>
+                <p>Local: a plain path like <code>/mnt/disk2/backups</code> works too.</p>
             </blockquote>
 
             <dl>
@@ -389,7 +403,8 @@ function bool_to_str($val): string {
                     </dd>
                 </dl>
                 <blockquote class="inline_help">
-
+                    <p>Preserves source modification times on the destination. Rsync flag: <code>--times</code>.</p>
+                    <p>If disabled, copied files get the current time as their modified date.</p>
                 </blockquote>
 
                 <dl>
@@ -408,7 +423,8 @@ function bool_to_str($val): string {
                     </dd>
                 </dl>
                 <blockquote class="inline_help">
-                    Look up rsync delete-after
+                    <p>Removes files from the destination that no longer exist in the source, so the destination mirrors the source. Maps to rsync's <code>--delete-after</code>, <code>--delete-before</code>, <code>--delete-during</code>, or <code>--delete-delay</code>.</p>
+                    <p><strong>After</strong> is safest: deletions only happen if transfers succeeded.</p>
                 </blockquote>
 
                 <dl>
@@ -425,7 +441,8 @@ function bool_to_str($val): string {
                     </dd>
                 </dl>
                 <blockquote class="inline_help">
-
+                    <p>Compresses files during transfer. Rsync flag: <code>--compress</code>.</p>
+                    <p>Saves bandwidth on slow or remote links. Rarely worth the CPU cost for local-to-local syncs or already-compressed files (mp4, zip, etc.).</p>
                 </blockquote>
 
                 <dl>
@@ -438,6 +455,10 @@ function bool_to_str($val): string {
                                placeholder="Will override other Rsync options">
                     </dd>
                 </dl>
+                <blockquote class="inline_help">
+                    <p>Free-form rsync flags. When set, replaces the structured options above.</p>
+                    <p>Example: <code>-avh --exclude=node_modules</code></p>
+                </blockquote>
             </blockquote>
 
             <dl>
@@ -576,7 +597,10 @@ function bool_to_str($val): string {
                     </dd>
                 </dl>
                 <blockquote class='inline_help'>
-                    <p>Any local directories that should be backed up</p>
+                    <p>Local paths to back up. One per line. Files or directories under <code>/mnt/</code>.</p>
+                    <p><strong>Trailing slash matters in rsync.</strong></p>
+                    <p><code>/mnt/user/Docs</code> copies the <code>Docs</code> folder itself. The destination gets a <code>Docs/</code> subdirectory.</p>
+                    <p><code>/mnt/user/Docs/</code> copies only its contents. Files land directly in the destination, no <code>Docs/</code> wrapper.</p>
                 </blockquote>
 
                 <dl>
@@ -594,8 +618,9 @@ function bool_to_str($val): string {
                     </dd>
                 </dl>
                 <blockquote class='inline_help'>
-                    <p>Any remote host destinations that files will be copied to</p>
-                    <p>In the format: <code>[User@]Host:/Folder</code></p>
+                    <p>Where to copy the sources. One per line. Every source is copied to every destination.</p>
+                    <p>Remote: <code>[user@]host:/path</code>. For example, <code>backup@nas:/srv/backups</code>. SSH key auth must be set up from this Unraid box to the remote host (no password prompts).</p>
+                    <p>Local: a plain path like <code>/mnt/disk2/backups</code> works too.</p>
                 </blockquote>
 
                 <dl>
@@ -623,7 +648,8 @@ function bool_to_str($val): string {
                         </dd>
                     </dl>
                     <blockquote class="inline_help">
-
+                        <p>Preserves source modification times on the destination. Rsync flag: <code>--times</code>.</p>
+                        <p>If disabled, copied files get the current time as their modified date.</p>
                     </blockquote>
 
                     <dl>
@@ -641,7 +667,8 @@ function bool_to_str($val): string {
                         </dd>
                     </dl>
                     <blockquote class="inline_help">
-                        Look up rsync delete-after
+                        <p>Removes files from the destination that no longer exist in the source, so the destination mirrors the source. Maps to rsync's <code>--delete-after</code>, <code>--delete-before</code>, <code>--delete-during</code>, or <code>--delete-delay</code>.</p>
+                        <p><strong>After</strong> is safest: deletions only happen if transfers succeeded.</p>
                     </blockquote>
 
                     <dl>
@@ -657,7 +684,8 @@ function bool_to_str($val): string {
                         </dd>
                     </dl>
                     <blockquote class="inline_help">
-
+                        <p>Compresses files during transfer. Rsync flag: <code>--compress</code>.</p>
+                        <p>Saves bandwidth on slow or remote links. Rarely worth the CPU cost for local-to-local syncs or already-compressed files (mp4, zip, etc.).</p>
                     </blockquote>
 
                     <dl>
@@ -670,6 +698,10 @@ function bool_to_str($val): string {
                                    placeholder="Will override other Rsync options">
                         </dd>
                     </dl>
+                    <blockquote class="inline_help">
+                        <p>Free-form rsync flags. When set, replaces the structured options above.</p>
+                        <p>Example: <code>-avh --exclude=node_modules</code></p>
+                    </blockquote>
                 </blockquote>
 
                 <dl>
