@@ -3,7 +3,7 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2026.06.04">
+  <!ENTITY version      "2026.06.06">
   <!ENTITY gitBranch    "main">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY releaseLocation "https://github.com/&gitUser;/&repoName;/releases/download/&version;">
@@ -25,7 +25,7 @@
 <CHANGES>
 ## &pluginName;
 
-### 2026.06.04
+### 2026.06.06
 - Initial stable release.
 
 </CHANGES>
