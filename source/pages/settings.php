@@ -697,6 +697,14 @@ function bool_to_str($val): string {
                 multiSelect: true,
                 allowBrowsing: true
             });
+            $newEntry.find('dl').each(function () {
+                const $dl = $(this);
+                const $help = $dl.next('blockquote.inline_help');
+                if (!$help.length) return;
+                $dl.children('dt').css('cursor', 'help').on('click', function () {
+                    $help.slideToggle();
+                });
+            });
 
             syncEntryIndex++;
         });
