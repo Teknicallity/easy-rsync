@@ -4,10 +4,18 @@
 version_suffix=""
 version_override=""
 plugin_dir="$(dirname "$(realpath "$0")")"
-repo_name=$(printf '%q\n' "${plugin_dir##*/}") # takes the name from root directory
-plugin_name="${repo_name//-/\.}" # replaces dashes with dots
-plg_filepath=$(find "$plugin_dir" -name "${plugin_name}.plg" -exec realpath {} \;)
-plg_beta_filepath=$(find "$plugin_dir" -name "${plugin_name}.beta.plg" -exec realpath {} \;)
+# Derive the plugin name from the repo's .plg files, NOT the directory name.
+# In CI the repo is bind-mounted at /workspace, so the directory basename would be
+# "workspace" instead of "easy-rsync". The .plg filenames are the stable source of
+# truth: the stable .plg is the one that is not *.beta.plg, and the plugin name is
+# its filename without the ".plg" extension (e.g. easy.rsync).
+plg_filepath=$(find "$plugin_dir" -maxdepth 1 -name '*.plg' ! -name '*.beta.plg' | head -n1)
+plg_beta_filepath=$(find "$plugin_dir" -maxdepth 1 -name '*.beta.plg' | head -n1)
+if [[ -z "$plg_filepath" ]]; then
+  echo "Error: no stable .plg file found in $plugin_dir"; exit 1
+fi
+plugin_name=$(basename "$plg_filepath" .plg) # e.g. easy.rsync
+repo_name="${plugin_name//./-}" # GitHub repo uses dashes where the plugin uses dots
 accept_flag=false
 beta_flag=false
 unraidHost=""

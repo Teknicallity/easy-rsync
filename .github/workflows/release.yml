@@ -70,6 +70,9 @@ jobs:
           fi
 
       - name: Build .txz inside Slackware container
+        # The repo is bind-mounted at /workspace. pkg_build.sh derives the plugin
+        # name (easy.rsync / easy.rsync.beta) from the .plg files in the repo, NOT
+        # from this mount path -- so the mount name is intentionally irrelevant.
         run: |
           docker run --rm \
             -v "${{ github.workspace }}":/workspace \
