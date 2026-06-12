@@ -55,11 +55,24 @@ class LogHandler {
 
         try {
             // Write the message to the log file
-            fwrite($handle, date("Y-m-d H:i:s") . $message . PHP_EOL);
+            fwrite($handle, date("Y-m-d H:i:s") . " " . $message . PHP_EOL);
         } catch (Exception $e) {
             throw new Exception("Error writing to log file: " . $e->getMessage());
         } finally {
             fclose($handle);  // Ensure the file is closed properly
+        }
+    }
+
+    /**
+     * Rotates the plugin and rsync logs one generation (current -> *.log.1),
+     * so the previous run stays on disk instead of being wiped at the start of
+     * the next run. Any existing *.log.1 is overwritten (bounded to 2 generations).
+     */
+    public static function rotateLogs(): void {
+        foreach ([ERSettings::getLogFilePath(), ERSettings::getRsyncLogFilePath()] as $path) {
+            if (file_exists($path)) {
+                @rename($path, $path . '.1');
+            }
         }
     }
 }
