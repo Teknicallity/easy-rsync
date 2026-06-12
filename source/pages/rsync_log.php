@@ -23,17 +23,6 @@ require_once dirname(__DIR__) . "/include/ERSettings.php";
 
     document.addEventListener("DOMContentLoaded", function () {
         setInterval(checkBackupRsync, 1000);
-
-        // Still loaded from status_log
-        // const abortBtn = document.getElementById('abortBtn');
-        // $('#abortBtn').on('click', function () {
-        //     $.post(urlRsync, {
-        //         action: 'abort',
-        //     }, function (response) {
-        //         console.log(response);
-        //     })
-        // });
-
         checkBackupRsync();
     });
 
@@ -48,18 +37,6 @@ require_once dirname(__DIR__) . "/include/ERSettings.php";
             } else {
                 rsyngLogDiv.innerHTML = data.log;
             }
-
-            // Still loaded from status_log
-            // if (data.status === 'running') {
-            //     backupStatusText.className = 'backupRunning';
-            //     backupStatusText.textContent = 'Running';
-            //     abortBtn.disabled = false;
-            // } else if (data.status === 'stopped') {
-            //     backupStatusText.className = 'backupNotRunning';
-            //     backupStatusText.textContent = 'Not Running';
-            //     abortBtn.disabled = true;
-            // }
-
         }).fail(function (jqXHR, textStatus, errorThrown) {
             console.error('Request failed:', jqXHR.status, textStatus, errorThrown);
             rsyngLogDiv.textContent = 'Something went wrong while talking to the server.'
