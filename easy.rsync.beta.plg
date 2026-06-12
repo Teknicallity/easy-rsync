@@ -3,7 +3,7 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync.beta">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2026.06.07.b1">
+  <!ENTITY version      "2026.06.11.b1">
   <!ENTITY gitBranch    "dev">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY releaseLocation "https://github.com/&gitUser;/&repoName;/releases/download/&version;">
@@ -24,6 +24,16 @@
 
 <CHANGES>
 ## &pluginName;
+
+### 2026.06.11.b1
+- Fix: backups no longer fail silently when the destination's parent folder is missing (rsync now creates the full path)
+- Fix: the Abort button now actually stops a running backup, and notes that the in-progress sync finishes first
+- Fix: notification "Open" button now opens Easy Rsync instead of another plugin
+- Rsync errors and the exact command run are now written to the log instead of failing quietly
+- New: "Preserve Symbolic Links" option (global and per sync job), on by default
+- Keep the previous run's logs (rotated) instead of wiping them on every run
+- Handle source/destination paths with spaces or special characters safely
+- Compress now defaults to off
 
 ### 2026.06.07.b1
 - Improve installation log
