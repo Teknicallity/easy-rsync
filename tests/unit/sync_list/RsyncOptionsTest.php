@@ -72,4 +72,15 @@ class RsyncOptionsTest extends TestCase {
         $options = RsyncOptions::fromArray(['rsyncCustom' => '--test-option']);
         $this->assertStringNotContainsString('--links', $options->buildRsyncArgumentsString());
     }
+
+    public function testCompressDefaultsOff() {
+        // Default matches default.cfg (rsyncCompress="false").
+        $options = RsyncOptions::fromArray(['rsyncRecursive' => true]);
+        $this->assertStringNotContainsString('--compress', $options->buildRsyncArgumentsString());
+    }
+
+    public function testCompressEnabledStillAddsFlag() {
+        $options = RsyncOptions::fromArray(['rsyncCompress' => true]);
+        $this->assertStringContainsString('--compress', $options->buildRsyncArgumentsString());
+    }
 }

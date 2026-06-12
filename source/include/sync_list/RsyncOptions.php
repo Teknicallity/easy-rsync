@@ -21,7 +21,7 @@ class RsyncOptions {
         bool $rsyncHumanReadable = true,
         string $rsyncDelete = "after",
         string $rsyncRemoteShell = "ssh",
-        bool $rsyncCompress = true,
+        bool $rsyncCompress = false,
         string $rsyncCustom = ""
     ) {
         $this->rsyncRecursive = $rsyncRecursive;
@@ -44,7 +44,7 @@ class RsyncOptions {
             rsyncHumanReadable: filter_var($data['rsyncHumanReadable'] ?? true, FILTER_VALIDATE_BOOLEAN),
             rsyncDelete: $data['rsyncDelete'] ?? "after",
             rsyncRemoteShell: $data['rsyncRemoteShell'] ?? "ssh",
-            rsyncCompress: filter_var($data['rsyncCompress'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            rsyncCompress: filter_var($data['rsyncCompress'] ?? false, FILTER_VALIDATE_BOOLEAN),
             rsyncCustom: $data['rsyncCustom'] ?? ""
         );
     }
