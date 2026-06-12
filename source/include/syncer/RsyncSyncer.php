@@ -4,6 +4,7 @@ namespace unraid\plugins\EasyRsync;
 
 require_once __DIR__ ."/Syncer.php";
 require_once dirname(__DIR__) . "/ERSettings.php";
+require_once dirname(__DIR__) . "/Logger.php";
 
 use unraid\plugins\EasyRsync\Exceptions\RsyncFailureException;
 use unraid\plugins\EasyRsync\Syncer;
@@ -19,6 +20,8 @@ class RsyncSyncer implements Syncer {
         // 2>&1: rsync's fatal errors go to stderr, which --log-file does NOT record.
         $command = "rsync $rsyncOptions '$source' '$destination'"
             . " --log-file='" . $rsyncLogFilePath . "' 2>&1";
+
+        Logger::getLogger()->debug("Running rsync command: $command");
 
         exec($command, $output, $return_var);
 
