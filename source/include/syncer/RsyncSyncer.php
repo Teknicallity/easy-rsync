@@ -17,9 +17,12 @@ class RsyncSyncer implements Syncer {
     public function performSync(string $source, string $destination, string $rsyncOptions): void {
         $rsyncLogFilePath = ERSettings::getRsyncLogFilePath();
 
+        // escapeshellarg paths so spaces/quotes/special chars are safe (NOT
+        // $rsyncOptions, which is a pre-joined flag string that must word-split).
         // 2>&1: rsync's fatal errors go to stderr, which --log-file does NOT record.
-        $command = "rsync $rsyncOptions '$source' '$destination'"
-            . " --log-file='" . $rsyncLogFilePath . "' 2>&1";
+        $command = "rsync $rsyncOptions "
+            . escapeshellarg($source) . " " . escapeshellarg($destination)
+            . " --log-file=" . escapeshellarg($rsyncLogFilePath) . " 2>&1";
 
         Logger::getLogger()->debug("Running rsync command: $command");
 
