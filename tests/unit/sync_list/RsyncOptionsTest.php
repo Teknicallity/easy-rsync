@@ -55,4 +55,21 @@ class RsyncOptionsTest extends TestCase {
         $options = RsyncOptions::fromArray(['rsyncCustom' => '--test-option']);
         $this->assertStringNotContainsString('--mkpath', $options->buildRsyncArgumentsString());
     }
+
+    public function testDefaultOptionsIncludeLinks() {
+        // rsyncLinks defaults to true when the key is absent.
+        $options = RsyncOptions::fromArray(['rsyncRecursive' => true]);
+        $this->assertStringContainsString('--links', $options->buildRsyncArgumentsString());
+        $this->assertStringContainsString('--links', $options->buildRsyncArgumentsString(true));
+    }
+
+    public function testLinksDisabledOmitsLinks() {
+        $options = RsyncOptions::fromArray(['rsyncLinks' => false]);
+        $this->assertStringNotContainsString('--links', $options->buildRsyncArgumentsString());
+    }
+
+    public function testCustomOptionsDoNotInjectLinks() {
+        $options = RsyncOptions::fromArray(['rsyncCustom' => '--test-option']);
+        $this->assertStringNotContainsString('--links', $options->buildRsyncArgumentsString());
+    }
 }

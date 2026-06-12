@@ -5,6 +5,7 @@ namespace unraid\plugins\EasyRsync;
 class RsyncOptions {
     public bool $rsyncRecursive;
     public bool $rsyncTimes;
+    public bool $rsyncLinks;
     public bool $rsyncVerbose;
     public bool $rsyncHumanReadable;
     public string $rsyncDelete;
@@ -15,6 +16,7 @@ class RsyncOptions {
     private function __construct(
         bool $rsyncRecursive = true,
         bool $rsyncTimes = true,
+        bool $rsyncLinks = true,
         bool $rsyncVerbose = true,
         bool $rsyncHumanReadable = true,
         string $rsyncDelete = "after",
@@ -24,6 +26,7 @@ class RsyncOptions {
     ) {
         $this->rsyncRecursive = $rsyncRecursive;
         $this->rsyncTimes = $rsyncTimes;
+        $this->rsyncLinks = $rsyncLinks;
         $this->rsyncVerbose = $rsyncVerbose;
         $this->rsyncHumanReadable = $rsyncHumanReadable;
         $this->rsyncDelete = $rsyncDelete;
@@ -36,6 +39,7 @@ class RsyncOptions {
         return new self(
             rsyncRecursive: filter_var($data['rsyncRecursive'] ?? true, FILTER_VALIDATE_BOOLEAN),
             rsyncTimes: filter_var($data['rsyncTimes'] ?? true, FILTER_VALIDATE_BOOLEAN),
+            rsyncLinks: filter_var($data['rsyncLinks'] ?? true, FILTER_VALIDATE_BOOLEAN),
             rsyncVerbose: filter_var($data['rsyncVerbose'] ?? true, FILTER_VALIDATE_BOOLEAN),
             rsyncHumanReadable: filter_var($data['rsyncHumanReadable'] ?? true, FILTER_VALIDATE_BOOLEAN),
             rsyncDelete: $data['rsyncDelete'] ?? "after",
@@ -60,6 +64,11 @@ class RsyncOptions {
 
         if ($this->rsyncRecursive) {
             $options .= ' --recursive';
+        }
+        // Preserve symlinks as symlinks. Without --links rsync SILENTLY skips them
+        // ("skipping non-regular file"), dropping them from the backup entirely.
+        if ($this->rsyncLinks) {
+            $options .= ' --links';
         }
         if ($this->rsyncTimes) {
             $options .= ' --times';

@@ -160,7 +160,21 @@ function bool_to_str($val): string {
         <p>Preserves source modification times on the destination. Rsync flag: <code>--times</code>.</p>
         <p>If disabled, copied files get the current time as their modified date.</p>
     </blockquote>
-    
+
+    <dl>
+        <dt>Preserve Symbolic Links</dt>
+        <dd>
+            <select id="rsyncLinks" name="rsyncLinks" class="rsyncOption globalOption">
+                <?= mk_option($userConfig["rsyncLinks"], "false", "No") ?>
+                <?= mk_option($userConfig["rsyncLinks"], "true", "Yes") ?>
+            </select>
+        </dd>
+    </dl>
+    <blockquote class="inline_help">
+        <p>Copies symlinks as symlinks. Rsync flag: <code>--links</code>.</p>
+        <p>If disabled, symlinks are skipped entirely and won't be in the backup.</p>
+    </blockquote>
+
     <dl>
         <dt>When to Delete Old Transfer Files</dt>
         <dd>
@@ -408,6 +422,24 @@ function bool_to_str($val): string {
                 </blockquote>
 
                 <dl>
+                    <dt>Preserve symbolic links</dt>
+                    <dd>
+                        <select name="syncEntries[<?= (int)$index; ?>][rsyncOptions][rsyncLinks]"
+                                class="rsyncOption entryOption">
+                            <?php
+                            $selectedValue = bool_to_str($syncEntry->rsyncOptions?->rsyncLinks ?? $userConfig["rsyncLinks"]);
+                            echo mk_option($selectedValue, "false", "No");
+                            echo mk_option($selectedValue, "true", "Yes");
+                            ?>
+                        </select>
+                    </dd>
+                </dl>
+                <blockquote class="inline_help">
+                    <p>Copies symlinks as symlinks. Rsync flag: <code>--links</code>.</p>
+                    <p>If disabled, symlinks are skipped entirely and won't be in the backup.</p>
+                </blockquote>
+
+                <dl>
                     <dt>When to delete old files</dt>
                     <dd>
                         <select name="syncEntries[<?= (int)$index; ?>][rsyncOptions][rsyncDelete]"
@@ -650,6 +682,23 @@ function bool_to_str($val): string {
                     <blockquote class="inline_help">
                         <p>Preserves source modification times on the destination. Rsync flag: <code>--times</code>.</p>
                         <p>If disabled, copied files get the current time as their modified date.</p>
+                    </blockquote>
+
+                    <dl>
+                        <dt>Preserve symbolic links</dt>
+                        <dd>
+                            <select name="syncEntries[${syncEntryIndex}][rsyncOptions][rsyncLinks]"
+                                    class="rsyncOption entryOption">
+                                <?php
+                echo mk_option($userConfig["rsyncLinks"], "false", "No");
+                echo mk_option($userConfig["rsyncLinks"], "true", "Yes");
+                ?>
+                            </select>
+                        </dd>
+                    </dl>
+                    <blockquote class="inline_help">
+                        <p>Copies symlinks as symlinks. Rsync flag: <code>--links</code>.</p>
+                        <p>If disabled, symlinks are skipped entirely and won't be in the backup.</p>
                     </blockquote>
 
                     <dl>
