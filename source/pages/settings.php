@@ -38,8 +38,6 @@ if ($_POST) {
     if (!file_exists(ERSettings::getConfigDir())) {
         mkdir(ERSettings::getConfigDir());
     }
-    $results = print_r($_POST, true);
-    file_put_contents(ERSettings::getConfigDir() ."/form_output.txt", $results);
 
     // Update user config
     $currentConfig = ERSettings::getUserConfig();
