@@ -8,4 +8,24 @@ class RsyncFailureException extends \Exception
     {
         parent::__construct($message, $code, $previous);
     }
+
+    /** Maps common rsync exit codes to human meanings. See `man rsync` EXIT VALUES. */
+    public static function describeExitCode(int $code): string
+    {
+        return match ($code) {
+            1  => 'Syntax or usage error',
+            2  => 'Protocol incompatibility',
+            3  => 'Errors selecting input/output files, dirs',
+            5  => 'Error starting client-server protocol',
+            10 => 'Error in socket I/O',
+            11 => 'Error in file I/O (often: destination parent directory does not exist)',
+            12 => 'Error in rsync protocol data stream (often: destination parent missing on remote)',
+            13 => 'Errors with program diagnostics',
+            23 => 'Partial transfer due to error (e.g. missing destination path or permission denied)',
+            24 => 'Partial transfer due to vanished source files',
+            30 => 'Timeout in data send/receive',
+            35 => 'Timeout waiting for daemon connection',
+            default => 'Unknown rsync error',
+        };
+    }
 }
