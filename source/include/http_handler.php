@@ -1,8 +1,12 @@
 <?php
 
 require_once __DIR__ . "/LogHandler.php";
+require_once __DIR__ . "/ERSettings.php";
+require_once __DIR__ . "/ERHelper.php";
 
 use unraid\plugins\EasyRsync\LogHandler;
+use unraid\plugins\EasyRsync\ERSettings;
+use unraid\plugins\EasyRsync\ERHelper;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -23,9 +27,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 function handlePostAction(string $action): void {
     switch ($action) {
         case 'abort':
-            // handleAbortAction();
-            exec('logger er abort');
-            sendResponse(['msg' => 'Abort Success']);
+            if (ERHelper::isBackupRunning()) {
+                file_put_contents(ERSettings::getStateRsyncAbortedFilePath(), '1');
+                exec('logger -t EasyRsync Abort requested');
+                sendResponse(['msg' => 'Abort requested. The backup will stop before the next item.']);
+            } else {
+                sendResponse(['msg' => 'No backup is running.']);
+            }
             break;
         case 'manualBackup':
             exec('php ' . dirname(__DIR__) . '/scripts/rsync_backup.php > /dev/null &');
