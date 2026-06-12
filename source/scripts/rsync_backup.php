@@ -2,7 +2,6 @@
 
 namespace unraid\plugins\EasyRsync;
 
-require_once dirname(__DIR__) ."/include/BackupHelper.php";
 require_once dirname(__DIR__) ."/include/ERHelper.php";
 require_once dirname(__DIR__) ."/include/ERSettings.php";
 require_once dirname(__DIR__) ."/include/Logger.php";
@@ -45,10 +44,10 @@ if (ERHelper::isBackupRunning()) {
 }
 $logger->debug("Backup is not already running");
 
-// if tempfolder exists, remove all logs
+// if tempfolder exists, rotate the previous run's logs (keep one generation)
 if (file_exists(ERSettings::getTempDir())) {
-    exec("rm " . ERSettings::getTempDir() . '/*.log');
-    $logger->info("Removing previous logs");
+    LogHandler::rotateLogs();
+    $logger->info("Rotated previous logs");
 }
 
 // Remove dangling abort status

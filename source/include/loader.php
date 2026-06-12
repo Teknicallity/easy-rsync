@@ -3,7 +3,6 @@
 $plugin_path = __DIR__;
 
 # Others
-require_once $plugin_path . '/BackupHelper.php';
 require_once $plugin_path . '/ERHelper.php';
 require_once $plugin_path . '/ERSettings.php';
 require_once $plugin_path . '/FileUtils.php';
