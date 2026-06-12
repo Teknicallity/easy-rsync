@@ -3,6 +3,7 @@
 namespace unraid\plugins\EasyRsync;
 
 require_once __DIR__ ."/NotificationLevel.php";
+require_once dirname(__DIR__) . "/ERSettings.php";
 
 class Notification {
     private string $event = "Easy Rsync";
@@ -10,13 +11,14 @@ class Notification {
     private string $description;
     private string $message;
     private NotificationLevel $level;
-    private string $link = "/Settings/AB.Main";
+    private string $link = "";
 
     public function __construct($subject = "", $description = "", $message = "", $level = NotificationLevel::NORMAL) {
         $this->subject = $subject;
         $this->description = $description;
         $this->message = $message;
         $this->level = $level;
+        $this->link = ERSettings::getPluginPageUrl();
         return $this;
     }
 
@@ -72,7 +74,7 @@ class Notification {
 
         $command = '/usr/local/emhttp/webGui/scripts/notify -e "Easy Rsync" -s ' . escapeshellarg($subject) . ' ' .
             '-d ' . escapeshellarg($description) . ' -m ' . escapeshellarg($message) . ' -i ' . $level->value . ' ' .
-            '-l "/Settings/AB.Main"';
+            '-l ' . escapeshellarg(ERSettings::getPluginPageUrl());
         shell_exec($command);
     }
 }

@@ -20,6 +20,19 @@ class ERSettingsTest extends TestCase {
         $this->assertSame(getenv('EASY_RSYNC_TEMP_DIR'), ERSettings::getTempDir());
     }
 
+    public function testGetPluginPageUrlStableAndBeta(): void {
+        $originalAppName = ERSettings::$appName;
+        try {
+            ERSettings::$appName = 'easy.rsync';
+            $this->assertSame('/Settings/EasyRsync', ERSettings::getPluginPageUrl());
+
+            ERSettings::$appName = 'easy.rsync.beta';
+            $this->assertSame('/Settings/EasyRsync.Beta', ERSettings::getPluginPageUrl());
+        } finally {
+            ERSettings::$appName = $originalAppName;
+        }
+    }
+
     public function testSaveAndReadUserConfigRoundTripWithBetaAppName(): void {
         $originalAppName = ERSettings::$appName;
         try {

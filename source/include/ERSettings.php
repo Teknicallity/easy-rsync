@@ -24,6 +24,18 @@ class ERSettings {
         return getenv('EASY_RSYNC_TEMP_DIR') ?: '/tmp/' . self::$appName;
     }
 
+    /**
+     * URL of this plugin's page, used for the "Open" link on Unraid notifications.
+     * Unraid resolves the page by name regardless of the menu-section prefix, so
+     * the common `/Settings/<Page>` convention is used. Derived from $appName so it
+     * stays correct for the beta build (the package builder rewrites $appName to
+     * 'easy.rsync.beta' and renames the page to EasyRsync.Beta).
+     */
+    public static function getPluginPageUrl(): string {
+        $page = 'EasyRsync' . (str_ends_with(self::$appName, '.beta') ? '.Beta' : '');
+        return '/Settings/' . $page;
+    }
+
     public static function getUserConfig(): array{
         return parse_plugin_cfg(self::$appName);
     }
