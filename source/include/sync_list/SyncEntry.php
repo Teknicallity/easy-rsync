@@ -97,7 +97,6 @@ class SyncEntry {
                         'Abort requested'
                     );
                 }
-                self::$logger->info("Abort request received");
                 return SyncStatus::Skipped;
             }
 

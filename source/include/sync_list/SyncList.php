@@ -111,6 +111,7 @@ class SyncList {
         $isAbortRequested = ERHelper::isAbortRequested();
         if ($isAbortRequested) {
             $this->abortRequested = true;
+            self::$logger->info("Abort detected: the current sync has finished; skipping the remaining syncs.");
         }
 
         return $isAbortRequested;
