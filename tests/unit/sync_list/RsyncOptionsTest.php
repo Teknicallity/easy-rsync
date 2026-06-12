@@ -44,4 +44,15 @@ class RsyncOptionsTest extends TestCase {
         $options = RsyncOptions::fromArray(['rsyncCustom' => '--test-option']);
         $this->assertStringContainsString('--dry-run', $options->buildRsyncArgumentsString(true));
     }
+
+    public function testDefaultOptionsIncludeMkpath() {
+        $options = RsyncOptions::fromArray(['rsyncRecursive' => true]);
+        $this->assertStringContainsString('--mkpath', $options->buildRsyncArgumentsString());
+        $this->assertStringContainsString('--mkpath', $options->buildRsyncArgumentsString(true));
+    }
+
+    public function testCustomOptionsDoNotInjectMkpath() {
+        $options = RsyncOptions::fromArray(['rsyncCustom' => '--test-option']);
+        $this->assertStringNotContainsString('--mkpath', $options->buildRsyncArgumentsString());
+    }
 }

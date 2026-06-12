@@ -90,6 +90,12 @@ class RsyncOptions {
             $options .= ' --compress';
         }
 
+        // rsync only creates the final dest component; a missing intermediate
+        // parent makes a REAL run fail (a --dry-run silently "succeeds"),
+        // leaving an empty/non-created destination. --mkpath (rsync >= 3.2.3;
+        // Unraid ships 3.2.7+/3.3.x) creates parents for local AND remote dests.
+        $options .= ' --mkpath';
+
         if ($doDryRun) {
             $options .= ' --dry-run';
         }
