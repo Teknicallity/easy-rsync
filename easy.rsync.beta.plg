@@ -3,7 +3,7 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync.beta">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2026.06.12.b1">
+  <!ENTITY version      "2026.06.13.b1">
   <!ENTITY gitBranch    "dev">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY releaseLocation "https://github.com/&gitUser;/&repoName;/releases/download/&version;">
@@ -24,6 +24,11 @@
 
 <CHANGES>
 ## &pluginName;
+
+### 2026.06.13.b1
+- New: "Test Connection" button on each sync job that checks an SSH destination's connection and whether rsync is installed on the remote (and that a local path is writable)
+- Unreachable SSH destinations now log a pre-flight warning at the start of a run; backups still proceed
+- Clearer log messages for SSH/connection failures instead of "unknown error"
 
 ### 2026.06.12.b1
 - New: "Force Stop" immediately cancels the running transfer; the soft stop is now "Graceful Stop" (finishes the current job, then skips the rest)
