@@ -104,8 +104,9 @@ matches the channel; it creates the tag at that branch's HEAD if it doesn't exis
    (only if it changed).
 6. **Publishes** a GitHub Release with `archive/*.txz` attached --
    prerelease + not-latest for beta, latest for stable. The release body is the
-   `### <version>` changelog section from the channel's `.plg` (falling back to
-   GitHub's auto-generated notes if no matching section is found).
+   `### <version>` changelog section from the channel's `.plg`, with a
+   "Full Changelog" compare link appended (falling back to GitHub's auto-generated
+   notes if no matching section is found).
 
 ### What the build does
 

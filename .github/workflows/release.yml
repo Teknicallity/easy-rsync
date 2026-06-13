@@ -94,23 +94,38 @@ jobs:
             git push origin "${{ steps.detect.outputs.target_branch }}"
           fi
 
-      - name: Extract changelog for this version
+      - name: Build release notes (changelog + Full Changelog link)
         id: changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           PLG="${{ steps.detect.outputs.plg_file }}"
           VERSION="${{ steps.version.outputs.version }}"
+          TARGET="${{ steps.detect.outputs.target_branch }}"
           # Pull the bullets under the matching "### <version>" section of the .plg's
           # <CHANGES> block, stopping at the next blank line / next "###" / </CHANGES>.
           awk -v ver="$VERSION" '
             $1=="###" && $2==ver {grab=1; next}
             grab && ($1=="###" || $0 ~ /^[[:space:]]*$/ || $0 ~ /<\/CHANGES>/) {exit}
             grab {print}
-          ' "$PLG" > release_notes.md
-          if [ -s release_notes.md ]; then
+          ' "$PLG" > custom_notes.md
+
+          if [ -s custom_notes.md ]; then
+            cp custom_notes.md release_notes.md
+            # Append only GitHub's "Full Changelog: <compare-url>" link (not the whole
+            # commit list). generate-notes computes the previous tag for us; grep the
+            # single link line out of its body.
+            LINK="$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+                      -f tag_name="$VERSION" -f target_commitish="$TARGET" --jq '.body' \
+                    | grep -m1 'Full Changelog' || true)"
+            if [ -n "$LINK" ]; then
+              printf '\n%s\n' "$LINK" >> release_notes.md
+            fi
             echo "has_notes=true" >> "$GITHUB_OUTPUT"
-            echo "Changelog for $VERSION from $PLG:"
+            echo "Release notes for $VERSION:"
             cat release_notes.md
           else
+            : > release_notes.md
             echo "has_notes=false" >> "$GITHUB_OUTPUT"
             echo "::warning::No '### $VERSION' section found in $PLG - falling back to auto-generated notes."
           fi
