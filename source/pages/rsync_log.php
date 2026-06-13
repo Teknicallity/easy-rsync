@@ -16,8 +16,22 @@ require_once dirname(__DIR__) . "/include/ERSettings.php";
 <div style='border: 1px solid red; height:500px; overflow:auto;' id='rsyngLogFrame'>Loading...</div>
 <button class="manualBackupButton">Manual Backup</button>
 <button class="manualDryBackupButton">Manual Dry Backup</button>
-<input type='button' class="abortBtn" value='Graceful Stop' disabled/>
-<input type='button' class="forceStopBtn" value='Force Stop' disabled/>
+<div class="abortControls" style="display:inline-block;">
+    <input type='button' class="abortBtn" value='Graceful Stop' disabled/>
+    <input type='button' class="forceStopBtn" value='Force Stop' disabled/>
+
+    <div class="abort-confirm graceful-confirm" style="display:none;">
+        <p>Stop after the current sync finishes? The job in progress completes, then the remaining jobs are skipped.</p>
+        <input type="button" value="Cancel" onclick="cancelAbortConfirm(this)"/>
+        <input type="button" class="confirmGracefulButton" value="Graceful Stop" onclick="confirmGracefulStop(this)"/>
+    </div>
+
+    <div class="abort-confirm force-confirm" style="display:none;">
+        <p>Force stop now? The transfer in progress is killed immediately. Files already copied are kept; nothing is deleted.</p>
+        <input type="button" value="Cancel" onclick="cancelAbortConfirm(this)"/>
+        <input type="button" class="confirmForceStopButton" value="Force Stop" onclick="confirmForceStop(this)"/>
+    </div>
+</div>
 
 <script>
     const urlRsync = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";
