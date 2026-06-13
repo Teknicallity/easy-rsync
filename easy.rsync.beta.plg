@@ -3,7 +3,7 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync.beta">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2026.06.11.b1">
+  <!ENTITY version      "2026.06.12.b1">
   <!ENTITY gitBranch    "dev">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY releaseLocation "https://github.com/&gitUser;/&repoName;/releases/download/&version;">
@@ -24,6 +24,11 @@
 
 <CHANGES>
 ## &pluginName;
+
+### 2026.06.12.b1
+- New: "Force Stop" immediately cancels the running transfer; the soft stop is now "Graceful Stop" (finishes the current job, then skips the rest)
+- Stop buttons now ask for confirmation first (Shift-click to skip)
+- Send a warning notification when a backup stop is requested
 
 ### 2026.06.11.b1
 - Fix: backups no longer fail silently when the destination's parent folder is missing (rsync now creates the full path)
