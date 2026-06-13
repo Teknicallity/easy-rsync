@@ -4,11 +4,15 @@ require_once __DIR__ . "/LogHandler.php";
 require_once __DIR__ . "/ERSettings.php";
 require_once __DIR__ . "/ERHelper.php";
 require_once __DIR__ . "/Logger.php";
+require_once __DIR__ . "/notifications/Notification.php";
+require_once __DIR__ . "/notifications/NotificationLevel.php";
 
 use unraid\plugins\EasyRsync\LogHandler;
 use unraid\plugins\EasyRsync\ERSettings;
 use unraid\plugins\EasyRsync\ERHelper;
 use unraid\plugins\EasyRsync\Logger;
+use unraid\plugins\EasyRsync\Notification;
+use unraid\plugins\EasyRsync\NotificationLevel;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -33,6 +37,11 @@ function handlePostAction(string $action): void {
                 file_put_contents(ERSettings::getStateRsyncAbortedFilePath(), '1');
                 Logger::getLogger()->info("Graceful stop requested. The current sync will finish, then the remaining syncs will be skipped.");
                 exec('logger -t EasyRsync Graceful stop requested');
+                Notification::simpleNotify(
+                    "Backup stop requested",
+                    "The sync in progress will finish, then the remaining jobs are skipped.",
+                    level: NotificationLevel::WARNING
+                );
                 sendResponse(['msg' => 'Graceful stop requested. The backup will stop after the current sync finishes.']);
             } else {
                 sendResponse(['msg' => 'No backup is running.']);
@@ -45,6 +54,12 @@ function handlePostAction(string $action): void {
                 $killed = ERHelper::killRunningRsync();
                 Logger::getLogger()->warning("Force stop requested. Killing the running rsync; remaining syncs will be skipped.");
                 exec('logger -t EasyRsync Force stop requested');
+                Notification::simpleNotify(
+                    "Backup force stopped",
+                    $killed ? "The running transfer was killed; remaining jobs skipped."
+                            : "Force stop requested; remaining jobs will be skipped.",
+                    level: NotificationLevel::WARNING
+                );
                 sendResponse(['msg' => $killed
                     ? 'Force stop: the running transfer was killed; remaining jobs skipped.'
                     : 'Force stop requested; remaining jobs will be skipped.']);
