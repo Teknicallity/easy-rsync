@@ -6,6 +6,7 @@ require_once __DIR__ . "/ERHelper.php";
 require_once __DIR__ . "/Logger.php";
 require_once __DIR__ . "/notifications/Notification.php";
 require_once __DIR__ . "/notifications/NotificationLevel.php";
+require_once __DIR__ . "/ConnectionTester.php";
 
 use unraid\plugins\EasyRsync\LogHandler;
 use unraid\plugins\EasyRsync\ERSettings;
@@ -13,6 +14,7 @@ use unraid\plugins\EasyRsync\ERHelper;
 use unraid\plugins\EasyRsync\Logger;
 use unraid\plugins\EasyRsync\Notification;
 use unraid\plugins\EasyRsync\NotificationLevel;
+use unraid\plugins\EasyRsync\ConnectionTester;
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -66,6 +68,15 @@ function handlePostAction(string $action): void {
             } else {
                 sendResponse(['msg' => 'No backup is running.']);
             }
+            break;
+        case 'testConnection':
+            $raw = $_POST['destinations'] ?? '';
+            $destinations = array_filter(array_map('trim', preg_split("/\r\n|\n|\r/", $raw)));
+            $results = [];
+            foreach ($destinations as $destination) {
+                $results[] = ConnectionTester::test($destination);
+            }
+            sendResponse(['results' => array_values($results)]);
             break;
         case 'manualBackup':
             exec('php ' . dirname(__DIR__) . '/scripts/rsync_backup.php > /dev/null &');

@@ -4,6 +4,7 @@ namespace unraid\plugins\EasyRsync;
 
 require_once dirname(__DIR__) ."/include/ERHelper.php";
 require_once dirname(__DIR__) ."/include/ERSettings.php";
+require_once dirname(__DIR__) ."/include/ConnectionTester.php";
 require_once dirname(__DIR__) ."/include/Logger.php";
 require_once dirname(__DIR__) ."/include/notifications/Notification.php";
 require_once dirname(__DIR__) ."/include/notifications/NotificationLevel.php";
@@ -87,6 +88,22 @@ $logger->debug('Paths list file exists');
 // Get user defined synclist
 $syncList = SyncList::fromFile();
 $logger->info('Successfully parsed paths');
+
+// Pre-flight: warn about unreachable SSH destinations (informational only - never
+// blocks; local and non-SSH destinations are skipped so there's no added latency).
+$preflightSeen = [];
+foreach ($syncList->entries as $preflightEntry) {
+    foreach ($preflightEntry->destinations as $preflightDest) {
+        if (ConnectionTester::classify($preflightDest) !== 'ssh' || isset($preflightSeen[$preflightDest])) {
+            continue;
+        }
+        $preflightSeen[$preflightDest] = true;
+        $preflightResult = ConnectionTester::test($preflightDest);
+        if ($preflightResult['ok'] !== true) {
+            $logger->warning("Pre-flight: " . $preflightResult['message'] . " (" . $preflightDest . ")");
+        }
+    }
+}
 
 // Todo ensure no paths are empty
 

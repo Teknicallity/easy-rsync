@@ -381,6 +381,8 @@ function bool_to_str($val): string {
                             <button onclick="">Add to hosts</button>
                         </div> -->
                     </div>
+                    <input type="button" class="testConnButton" value="Test Connection" onclick="testJobConnections(this)"/>
+                    <div class="testConnResult"></div>
                 </dd>
             </dl>
             <blockquote class='inline_help'>
@@ -660,6 +662,8 @@ function bool_to_str($val): string {
                                 <button onclick="">Add to hosts</button>
                             </div> -->
                         </div>
+                        <input type="button" class="testConnButton" value="Test Connection" onclick="testJobConnections(this)"/>
+                        <div class="testConnResult"></div>
                     </dd>
                 </dl>
                 <blockquote class='inline_help'>
@@ -909,7 +913,34 @@ function bool_to_str($val): string {
         });
     }
 
+    // Test each destination in this sync job (SSH connection + remote rsync, local
+    // path writability). Informational only - never affects whether a backup runs.
+    function testJobConnections(button) {
+        const $entry = $(button).closest('.sync-entry');
+        const destinations = $entry.find('textarea[name*="[destinations]"]').val() || '';
+        const $result = $entry.find('.testConnResult');
+        $result.text('Testing...');
+
+        $.post(urlSettings, { action: 'testConnection', destinations: destinations }, function (data) {
+            const results = (data && data.results) || [];
+            if (results.length === 0) {
+                $result.html('<em>No destinations to test.</em>');
+                return;
+            }
+            const rows = results.map(function (r) {
+                const icon = r.ok === true ? 'OK' : (r.ok === false ? 'X' : '-');
+                const color = r.ok === true ? 'green' : (r.ok === false ? '#c44' : '#888');
+                // Escape destination + message (the message can include remote ssh output).
+                const text = $('<span>').text(icon + ' ' + r.destination + ' - ' + r.message).html();
+                return '<div style="color:' + color + '">' + text + '</div>';
+            });
+            $result.html(rows.join(''));
+        }).fail(function () {
+            $result.html('<span style="color:#c44">Test request failed.</span>');
+        });
+    }
+
     // $('#erSettingsForm').on('submit', function () {
-        
+
     // })
 </script>
