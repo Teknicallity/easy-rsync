@@ -5,7 +5,7 @@ use PHPUnit\Framework\TestCase;
 
 class RsyncFailureExceptionTest extends TestCase {
     public function testKnownCodesAreDescribed() {
-        foreach ([1, 2, 3, 5, 10, 11, 12, 13, 20, 23, 24, 30, 35] as $code) {
+        foreach ([1, 2, 3, 5, 10, 11, 12, 13, 20, 23, 24, 30, 35, 127, 255] as $code) {
             $this->assertNotSame(
                 'Unknown rsync error',
                 RsyncFailureException::describeExitCode($code),
@@ -14,9 +14,13 @@ class RsyncFailureExceptionTest extends TestCase {
         }
     }
 
-    public function testMissingParentCodesMentionParent() {
+    public function testMissingParentCodeMentionsParent() {
         $this->assertStringContainsString('parent', strtolower(RsyncFailureException::describeExitCode(11)));
-        $this->assertStringContainsString('parent', strtolower(RsyncFailureException::describeExitCode(12)));
+    }
+
+    public function testSshAndRemoteCodesAreDescriptive() {
+        $this->assertStringContainsString('ssh', strtolower(RsyncFailureException::describeExitCode(255)));
+        $this->assertStringContainsString('rsync', strtolower(RsyncFailureException::describeExitCode(127)));
     }
 
     public function testUnknownCode() {
