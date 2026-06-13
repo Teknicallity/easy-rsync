@@ -94,6 +94,27 @@ jobs:
             git push origin "${{ steps.detect.outputs.target_branch }}"
           fi
 
+      - name: Extract changelog for this version
+        id: changelog
+        run: |
+          PLG="${{ steps.detect.outputs.plg_file }}"
+          VERSION="${{ steps.version.outputs.version }}"
+          # Pull the bullets under the matching "### <version>" section of the .plg's
+          # <CHANGES> block, stopping at the next blank line / next "###" / </CHANGES>.
+          awk -v ver="$VERSION" '
+            $1=="###" && $2==ver {grab=1; next}
+            grab && ($1=="###" || $0 ~ /^[[:space:]]*$/ || $0 ~ /<\/CHANGES>/) {exit}
+            grab {print}
+          ' "$PLG" > release_notes.md
+          if [ -s release_notes.md ]; then
+            echo "has_notes=true" >> "$GITHUB_OUTPUT"
+            echo "Changelog for $VERSION from $PLG:"
+            cat release_notes.md
+          else
+            echo "has_notes=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::No '### $VERSION' section found in $PLG - falling back to auto-generated notes."
+          fi
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
@@ -102,4 +123,5 @@ jobs:
           files:       archive/*.txz
           prerelease:  ${{ steps.detect.outputs.is_beta }}
           make_latest: ${{ steps.detect.outputs.is_beta == 'false' }}
-          generate_release_notes: true
+          body_path:   release_notes.md
+          generate_release_notes: ${{ steps.changelog.outputs.has_notes == 'false' }}

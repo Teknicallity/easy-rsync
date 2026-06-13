@@ -60,6 +60,9 @@ break same-day ties in order: `2026.05.30` < `2026.05.30a` < `2026.05.30b`, and
 Pre-reqs:
 
 - `composer test` passes locally (see [README.md#tests](README.md#tests)).
+- The channel's `.plg` `<CHANGES>` block has a `### <version>` entry for the version
+  you're about to tag; the release body is pulled from it (no entry -> the workflow
+  falls back to GitHub's auto-generated notes).
 - The commit you want to ship is already on the correct branch -- **stable on `main`,
   beta on `dev`**. The workflow enforces this (it fails if the tag commit is not
   reachable from the expected branch).
@@ -100,7 +103,9 @@ matches the channel; it creates the tag at that branch's HEAD if it doesn't exis
 5. **Commits** the regenerated `.plg` back to the branch as `Release <version>`
    (only if it changed).
 6. **Publishes** a GitHub Release with `archive/*.txz` attached --
-   prerelease + not-latest for beta, latest for stable, with auto-generated notes.
+   prerelease + not-latest for beta, latest for stable. The release body is the
+   `### <version>` changelog section from the channel's `.plg` (falling back to
+   GitHub's auto-generated notes if no matching section is found).
 
 ### What the build does
 
