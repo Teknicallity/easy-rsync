@@ -11,7 +11,7 @@
   <!ENTITY launch       "Settings/EasyRsync.Beta">
   <!ENTITY plugin       "/boot/config/plugins/&pluginName;">
   <!ENTITY emhttp       "/usr/local/emhttp/plugins/&pluginName;">
-  <!ENTITY md5          "86cdf6642c5db3ca78a6695dc5d9ee34">
+  <!ENTITY md5          "285f4d4cf97c6b8d3dd5b972fccf8f63">
 ]>
 <PLUGIN name="&pluginName;" 
         author="Teknicallity" 
