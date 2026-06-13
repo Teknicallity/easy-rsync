@@ -39,6 +39,14 @@ require_once dirname(__DIR__) ."/include/ERSettings.php";
         background-color: #c44 !important;
         color: white !important;
     }
+
+    /* Holding Shift skips the confirmation; signal it by turning the button red
+       (same #c44 as the confirm) rather than changing the label, so nothing reflows. */
+    .abortBtn.skip-confirm-armed:enabled,
+    .forceStopBtn.skip-confirm-armed:enabled {
+        background-color: #c44 !important;
+        color: white !important;
+    }
 </style>
 
 <h3>The backup is <span id="backupStatusTextStatus" class="backupStatusText"></span>.</h3>
@@ -85,14 +93,12 @@ require_once dirname(__DIR__) ."/include/ERSettings.php";
             }
         });
 
-        // Shift hints that the confirmation will be skipped (mirrors the Remove pattern).
+        // Holding Shift skips the confirmation; turn the stop buttons red to signal it.
         $(document).on('keydown keyup', function (event) {
-            $('.abortBtn').val(event.shiftKey ? 'Graceful Stop (no confirm)' : 'Graceful Stop');
-            $('.forceStopBtn').val(event.shiftKey ? 'Force Stop (no confirm)' : 'Force Stop');
+            $('.abortBtn, .forceStopBtn').toggleClass('skip-confirm-armed', event.shiftKey);
         });
         $(window).on('blur', function () {
-            $('.abortBtn').val('Graceful Stop');
-            $('.forceStopBtn').val('Force Stop');
+            $('.abortBtn, .forceStopBtn').removeClass('skip-confirm-armed');
         });
 
         checkBackupStatus();
