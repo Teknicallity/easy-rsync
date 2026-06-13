@@ -25,6 +25,16 @@
 <CHANGES>
 ## &pluginName;
 
+### 2026.06.13
+- New: "Force Stop" (immediately kills the running transfer) alongside "Graceful Stop", with a confirmation prompt and a notification when a stop is requested
+- New: "Test Connection" button per sync job (checks SSH reachability and remote rsync, or a local path's writability)
+- New: "Preserve Symbolic Links" option (global and per job), on by default
+- Fix: backups no longer fail silently when the destination's parent folder is missing (rsync now creates the full path)
+- Rsync errors and the exact command are now logged; clearer SSH/connection error messages
+- Fix: notification "Open" button now opens Easy Rsync instead of another plugin
+- Keep the previous run's logs (rotated) instead of wiping them each run
+- Compress now defaults to off; paths with spaces or special characters are handled safely
+
 ### 2026.06.06
 - Initial stable release.
 
