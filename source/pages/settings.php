@@ -527,7 +527,8 @@ function bool_to_str($val): string {
 <div>
     <button class="manualBackupButton">Manual Backup</button>
     <button class="manualDryBackupButton">Manual Dry Backup</button>
-    <input type='button' class="abortBtn" value='Abort' disabled/>
+    <input type='button' class="abortBtn" value='Graceful Stop' disabled/>
+    <input type='button' class="forceStopBtn" value='Force Stop' disabled/>
 <!--    <button id="getBackupStatus">Get StatusJQuery</button>-->
     <div id="backupStatusDisplay"></div>
 </div>

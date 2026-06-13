@@ -21,6 +21,7 @@ class RsyncFailureException extends \Exception
             11 => 'Error in file I/O (often: destination parent directory does not exist)',
             12 => 'Error in rsync protocol data stream (often: destination parent missing on remote)',
             13 => 'Errors with program diagnostics',
+            20 => 'Received SIGINT/SIGTERM (transfer interrupted, e.g. by Force Stop)',
             23 => 'Partial transfer due to error (e.g. missing destination path or permission denied)',
             24 => 'Partial transfer due to vanished source files',
             30 => 'Timeout in data send/receive',

@@ -31,9 +31,23 @@ function handlePostAction(string $action): void {
         case 'abort':
             if (ERHelper::isBackupRunning()) {
                 file_put_contents(ERSettings::getStateRsyncAbortedFilePath(), '1');
-                Logger::getLogger()->info("Abort requested. The current sync will finish, then the remaining syncs will be skipped.");
-                exec('logger -t EasyRsync Abort requested');
-                sendResponse(['msg' => 'Abort requested. The backup will stop after the current sync finishes.']);
+                Logger::getLogger()->info("Graceful stop requested. The current sync will finish, then the remaining syncs will be skipped.");
+                exec('logger -t EasyRsync Graceful stop requested');
+                sendResponse(['msg' => 'Graceful stop requested. The backup will stop after the current sync finishes.']);
+            } else {
+                sendResponse(['msg' => 'No backup is running.']);
+            }
+            break;
+        case 'abortNow':
+            if (ERHelper::isBackupRunning()) {
+                // Set the abort flag first so the run stops even if the kill races/misses.
+                file_put_contents(ERSettings::getStateRsyncAbortedFilePath(), '1');
+                $killed = ERHelper::killRunningRsync();
+                Logger::getLogger()->warning("Force stop requested. Killing the running rsync; remaining syncs will be skipped.");
+                exec('logger -t EasyRsync Force stop requested');
+                sendResponse(['msg' => $killed
+                    ? 'Force stop: the running transfer was killed; remaining jobs skipped.'
+                    : 'Force stop requested; remaining jobs will be skipped.']);
             } else {
                 sendResponse(['msg' => 'No backup is running.']);
             }

@@ -14,6 +14,7 @@ class ERSettings {
     private static string $rsyncLogFileName = 'rsync.log';
     private static string $stateRsyncRunningFileName = 'running';
     private static string $stateRsyncAbortedFileName = 'aborted';
+    private static string $stateRsyncPidFileName = 'rsync.pid';
     public static string $emhttpVars = '/var/local/emhttp/var.ini';
 
     public static function getConfigDir() : string {
@@ -89,6 +90,11 @@ class ERSettings {
 
     public static function getStateRsyncAbortedFilePath(): string {
         return self::getTempDir() . '/' . self::$stateRsyncAbortedFileName;
+    }
+
+    /** Path to the file holding the PID of the rsync process currently running. */
+    public static function getStateRsyncPidFilePath(): string {
+        return self::getTempDir() . '/' . self::$stateRsyncPidFileName;
     }
 
     private static function savePaths(array $paths): bool|int {

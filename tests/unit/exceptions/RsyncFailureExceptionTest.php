@@ -5,7 +5,7 @@ use PHPUnit\Framework\TestCase;
 
 class RsyncFailureExceptionTest extends TestCase {
     public function testKnownCodesAreDescribed() {
-        foreach ([1, 2, 3, 5, 10, 11, 12, 13, 23, 24, 30, 35] as $code) {
+        foreach ([1, 2, 3, 5, 10, 11, 12, 13, 20, 23, 24, 30, 35] as $code) {
             $this->assertNotSame(
                 'Unknown rsync error',
                 RsyncFailureException::describeExitCode($code),

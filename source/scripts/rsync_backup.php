@@ -57,6 +57,11 @@ if (file_exists($abortFilePath)) {
     unlink($abortFilePath);
 }
 
+// Remove dangling rsync pid (from a prior killed run)
+if (file_exists(ERSettings::getStateRsyncPidFilePath())) {
+    unlink(ERSettings::getStateRsyncPidFilePath());
+}
+
 $logger->info("Saving process id". (string) getmypid());
 file_put_contents(ERSettings::getStateRsyncRunningFilePath(), getmypid());
 
@@ -157,6 +162,11 @@ function cleanup(): void {
     if (file_exists(ERSettings::getStateRsyncRunningFilePath())) {
         unlink(ERSettings::getStateRsyncRunningFilePath());
         $logger->debug("Removed running status file");
+    }
+
+    if (file_exists(ERSettings::getStateRsyncPidFilePath())) {
+        unlink(ERSettings::getStateRsyncPidFilePath());
+        $logger->debug("Removed rsync pid file");
     }
 
     $logger->info("Cleanup complete");

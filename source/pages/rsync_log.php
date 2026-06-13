@@ -16,7 +16,8 @@ require_once dirname(__DIR__) . "/include/ERSettings.php";
 <div style='border: 1px solid red; height:500px; overflow:auto;' id='rsyngLogFrame'>Loading...</div>
 <button class="manualBackupButton">Manual Backup</button>
 <button class="manualDryBackupButton">Manual Dry Backup</button>
-<input type='button' class="abortBtn" value='Abort' disabled/>
+<input type='button' class="abortBtn" value='Graceful Stop' disabled/>
+<input type='button' class="forceStopBtn" value='Force Stop' disabled/>
 
 <script>
     const urlRsync = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";

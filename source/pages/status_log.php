@@ -26,7 +26,8 @@ require_once dirname(__DIR__) ."/include/ERSettings.php";
 <div style='border: 1px solid red; height:500px; overflow:auto;' id='statusLogFrame'>Loading...</div>
 <button class="manualBackupButton">Manual Backup</button>
 <button class="manualDryBackupButton">Manual Dry Backup</button>
-<input type='button' class="abortBtn" value='Abort' disabled/>
+<input type='button' class="abortBtn" value='Graceful Stop' disabled/>
+<input type='button' class="forceStopBtn" value='Force Stop' disabled/>
 
 <script>
     const urlStatus = "/plugins/<?= ERSettings::$appName ?>/include/http_handler.php";
@@ -42,6 +43,14 @@ require_once dirname(__DIR__) ."/include/ERSettings.php";
             })
         });
 
+        $('.forceStopBtn').on('click', function () {
+            $.post(urlStatus, {
+                action: 'abortNow',
+            }, function (response) {
+                console.log(response);
+            })
+        });
+
         checkBackupStatus();
     });
 
@@ -49,6 +58,7 @@ require_once dirname(__DIR__) ."/include/ERSettings.php";
         const backupStatusTextElements = document.querySelectorAll('.backupStatusText');
         const statusLogDiv = document.getElementById('statusLogFrame');
         const abortBtnElements = document.querySelectorAll('.abortBtn');
+        const forceStopBtnElements = document.querySelectorAll('.forceStopBtn');
 
         $.get(`${urlStatus}?action=getPluginLog`, function (data) {
             // console.log(data);
@@ -67,6 +77,7 @@ require_once dirname(__DIR__) ."/include/ERSettings.php";
                 });
                 
                 abortBtnElements.forEach(button => button.disabled = (statusClass === 'backupNotRunning'));
+                forceStopBtnElements.forEach(button => button.disabled = (statusClass === 'backupNotRunning'));
             }
 
             if (data.running) {

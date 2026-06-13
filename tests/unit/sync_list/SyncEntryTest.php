@@ -111,6 +111,27 @@ class SyncEntryTest extends TestCase {
         $this->assertSame(SyncStatus::Skipped, $entry->results[2]->status);
     }
 
+    public function testForceStopWhileSyncingMarksJobSkipped(): void {
+        $syncer = new class implements Syncer {
+            public function performSync(string $source, string $destination, string $rsyncOptions): void {
+                throw new RsyncFailureException('killed by signal', 20);
+            }
+        };
+
+        $entry = new SyncEntry(['/a'], ['host:/b'], RsyncOptions::fromArray([]));
+        $entry->syncer = $syncer;
+
+        // Abort is not yet set at the loop check, but set by the time we're in the
+        // catch — i.e. the running rsync was force-stopped mid-transfer.
+        $checks = 0;
+        $entry->sync(function () use (&$checks) {
+            return $checks++ > 0;
+        }, false);
+
+        $this->assertSame(SyncStatus::Skipped, $entry->results[0]->status);
+        $this->assertSame('Force stopped', $entry->results[0]->error);
+    }
+
     public function testDryRunPassesDryRunFlag(): void {
         $syncer = new class implements Syncer {
             public string $opts = '';

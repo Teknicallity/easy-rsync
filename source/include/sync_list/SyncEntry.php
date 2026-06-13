@@ -107,9 +107,16 @@ class SyncEntry {
                 $this->syncer->performSync($pair['source'], $pair['destination'], $rsyncOptionsStr);
                 $status = SyncStatus::Success;
             } catch (RsyncFailureException|Exception $e) {
-                $status = SyncStatus::Failed;
-                $error = $e->getMessage();
-                self::$logger->error("Failed to sync '" . $pair['source'] . " with " . $pair['destination'] . "' Check Rsync Log.");
+                if ($isAborted()) {
+                    // rsync was killed by a Force Stop, not a genuine failure.
+                    $status = SyncStatus::Skipped;
+                    $error = 'Force stopped';
+                    self::$logger->info("Sync force-stopped for '" . $pair['source'] . "'");
+                } else {
+                    $status = SyncStatus::Failed;
+                    $error = $e->getMessage();
+                    self::$logger->error("Failed to sync '" . $pair['source'] . " with " . $pair['destination'] . "' Check Rsync Log.");
+                }
             }
 
             // Store the result of the current sync

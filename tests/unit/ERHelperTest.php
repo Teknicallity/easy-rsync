@@ -37,4 +37,17 @@ class ERHelperTest extends TestCase {
     public function testIsBackupRunningFalseWhenNoFile(): void {
         $this->assertFalse(ERHelper::isBackupRunning(), 'No running file means not running');
     }
+
+    public function testKillRunningRsyncFalseWhenNoPidFile(): void {
+        $this->assertFalse(ERHelper::killRunningRsync(), 'No pid file means nothing to kill');
+    }
+
+    public function testKillRunningRsyncStalePidReturnsFalseAndRemovesFile(): void {
+        $pidFile = ERSettings::getStateRsyncPidFilePath();
+        // Above the kernel PID max -> never present under /proc.
+        file_put_contents($pidFile, '2147483647');
+
+        $this->assertFalse(ERHelper::killRunningRsync(), 'A dead/stale pid is not killable');
+        $this->assertFileDoesNotExist($pidFile, 'A stale pid file should be removed');
+    }
 }
