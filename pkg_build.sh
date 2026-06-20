@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Abort on errors, unset variables, and failed pipeline stages so a partial or
+# botched build can never be packaged and published as a valid-looking release.
+# (The two `find | head` lookups below get an explicit `|| true`: head closing the
+# pipe early can make find exit via SIGPIPE, which pipefail would treat as fatal.)
+set -euo pipefail
+
 # Default values
 version_suffix=""
 version_override=""
@@ -9,8 +15,8 @@ plugin_dir="$(dirname "$(realpath "$0")")"
 # "workspace" instead of "easy-rsync". The .plg filenames are the stable source of
 # truth: the stable .plg is the one that is not *.beta.plg, and the plugin name is
 # its filename without the ".plg" extension (e.g. easy.rsync).
-plg_filepath=$(find "$plugin_dir" -maxdepth 1 -name '*.plg' ! -name '*.beta.plg' | head -n1)
-plg_beta_filepath=$(find "$plugin_dir" -maxdepth 1 -name '*.beta.plg' | head -n1)
+plg_filepath=$(find "$plugin_dir" -maxdepth 1 -name '*.plg' ! -name '*.beta.plg' | head -n1 || true)
+plg_beta_filepath=$(find "$plugin_dir" -maxdepth 1 -name '*.beta.plg' | head -n1 || true)
 if [[ -z "$plg_filepath" ]]; then
   echo "Error: no stable .plg file found in $plugin_dir"; exit 1
 fi
@@ -125,8 +131,8 @@ if [[ "$accept_flag" == false ]]; then
   echo -e "Plugin name: \t'$plugin_name'"
   echo -e "Version string: '$version'"
 
-  read -r -p "Are these correct? (y/Y to proceed): " user_input
-  if [[ "$user_input" != "y" && "$user_input" != "Y" ]]; then
+  read -r -p "Are these correct? (y/Y to proceed): " user_input || true
+  if [[ "${user_input:-}" != "y" && "${user_input:-}" != "Y" ]]; then
     echo "Exiting."
     exit 1
   fi
@@ -141,8 +147,8 @@ src_dir="$plugin_dir/source"
 archive_dir="$plugin_dir/archive"
 
 # Generate a unique temporary directory
-tmpdir="$plugin_dir/tmp/tmp.$(( $RANDOM * 19318203981230 + 40 ))"
-trap "rm -rf $tmpdir" EXIT
+tmpdir="$plugin_dir/tmp/tmp.$(( RANDOM * 19318203981230 + 40 ))"
+trap 'rm -rf "$tmpdir"' EXIT
 
 # Create necessary directories
 mkdir -p "$tmpdir/usr/local/emhttp/plugins/$plugin_name"
@@ -153,9 +159,36 @@ cd "$src_dir" || { echo "Source directory $src_dir does not exist."; exit 1; }
 
 # Ensure permissions and copy files to the temporary directory
 chmod 0755 -R "$src_dir"
-# Cannot put in quotes or else it fails
-cp --parents -f $(find . -type f ! \( -iname "pkg_build.sh" -o -iname "sftp-config.json" \) ) \
-    "$tmpdir/usr/local/emhttp/plugins/$plugin_name/"
+
+# Collect the source files to package (everything except the build script and any
+# editor cruft) into an array, so filenames with spaces survive (the old unquoted
+# $(find ...) word-split on them) and we can verify each one copied.
+mapfile -t src_files < <(find . -type f ! \( -iname "pkg_build.sh" -o -iname "sftp-config.json" \))
+if [[ ${#src_files[@]} -eq 0 ]]; then
+  echo "Error: no source files found under $src_dir to package."
+  exit 1
+fi
+
+pkg_root="$tmpdir/usr/local/emhttp/plugins/$plugin_name"
+cp --parents -f "${src_files[@]}" "$pkg_root/"
+
+# Verify every source file actually landed in the package. set -e already aborts if
+# cp returns non-zero, but this is the backstop against a silently-incomplete tree:
+# without it makepkg would happily package a partial copy and publish it as a
+# valid-looking release.
+missing=0
+for f in "${src_files[@]}"; do
+  rel="${f#./}"
+  if [[ ! -f "$pkg_root/$rel" ]]; then
+    echo "Error: source file failed to copy into the package: $rel"
+    missing=$((missing + 1))
+  fi
+done
+if (( missing > 0 )); then
+  echo "Aborting: $missing file(s) missing from the package; refusing to build an incomplete release."
+  exit 1
+fi
+
 chmod 0755 -R "$tmpdir"
 #chown root:root -R "$tmpdir"
 chmod 0755 "$plugin_dir"
