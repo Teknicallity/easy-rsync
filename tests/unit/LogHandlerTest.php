@@ -41,4 +41,31 @@ class LogHandlerTest extends TestCase {
         LogHandler::rotateLogs();
         $this->assertFileDoesNotExist(ERSettings::getLogFilePath() . '.1');
     }
+
+    public function testGetRsyncLogEscapesHtml(): void {
+        // rsync --verbose logs transferred filenames; an attacker-controlled name must
+        // not be rendered as live HTML when the log is injected via innerHTML.
+        file_put_contents(
+            ERSettings::getRsyncLogFilePath(),
+            "sending <img src=x onerror=\"alert('xss')\">\nnext line"
+        );
+
+        $out = LogHandler::getRsyncLog();
+
+        $this->assertStringNotContainsString('<img', $out, 'raw HTML tag must be escaped');
+        $this->assertStringContainsString('&lt;img', $out, 'tag should be HTML-escaped');
+        $this->assertStringContainsString('&quot;', $out, 'double quotes should be escaped (ENT_QUOTES)');
+        $this->assertStringContainsString('&#039;', $out, 'single quotes should be escaped (ENT_QUOTES)');
+        // Newlines are still turned into <br/> after escaping.
+        $this->assertMatchesRegularExpression('/<br\s*\/?>/', $out, 'newlines should become <br/>');
+    }
+
+    public function testGetPluginLogEscapesHtml(): void {
+        file_put_contents(ERSettings::getLogFilePath(), "<script>alert(1)</script>");
+
+        $out = LogHandler::getPluginLog();
+
+        $this->assertStringNotContainsString('<script>', $out);
+        $this->assertStringContainsString('&lt;script&gt;', $out);
+    }
 }

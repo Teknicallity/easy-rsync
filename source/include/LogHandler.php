@@ -35,8 +35,13 @@ class LogHandler {
         if (!file_exists($logFilePath)) {
             return nl2br("Log file does not exist");
         }
-        
-        return nl2br(file_get_contents($logFilePath));
+
+        // Escape HTML BEFORE nl2br: log lines are rendered into the page via innerHTML,
+        // and rsync --verbose logs every transferred filename. An attacker-controlled
+        // filename (e.g. in a backed-up share) like "<img src=x onerror=...>" would
+        // otherwise execute as script in the admin's browser. htmlspecialchars leaves
+        // newlines intact, so nl2br still produces the <br/> line breaks afterwards.
+        return nl2br(htmlspecialchars(file_get_contents($logFilePath), ENT_QUOTES, 'UTF-8'));
     }
 
     /**
