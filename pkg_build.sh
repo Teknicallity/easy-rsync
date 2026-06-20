@@ -253,7 +253,12 @@ if [[ -n "$plg_filepath" && "$dry_run" == false ]]; then
       sed -i "s|^<!-- <URL>\&releaseLocation;/\&pluginName;-\&version;\.txz</URL> -->|<URL>\&releaseLocation;/\&pluginName;-\&version;\.txz</URL>|" "$plg_filepath"
     else # unraid host set, package is pre-deployed via rsync — URL is unreachable, comment it out
       sed -i "s|^<URL>\&releaseLocation;/\&pluginName;-\&version;\.txz</URL>|<!-- <URL>\&releaseLocation;/\&pluginName;-\&version;\.txz</URL> -->|" "$plg_filepath"
-      sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"dev\">|" "$plg_filepath"
+      # gitBranch was already set to main (stable) or dev (beta) above. Only force dev
+      # for a beta -u deploy; a stable -u deploy must KEEP "main" so the test box still
+      # tracks the stable update channel (this previously clobbered stable to dev).
+      if [[ "$beta_flag" == true ]]; then
+        sed -i "s|<!ENTITY gitBranch    \".*\">|<!ENTITY gitBranch    \"dev\">|" "$plg_filepath"
+      fi
 
       rsync "$archive_file" "$unraidHost:/boot/config/plugins/$plugin_name/"
       rsync "$plg_filepath" "$unraidHost:/boot/"
