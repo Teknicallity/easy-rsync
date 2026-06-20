@@ -18,6 +18,14 @@ class ERHelper {
 
         $pid = preg_replace("/\D/", '', $pid);
 
+        // An empty/non-numeric running file leaves $pid == '', so '/proc/' . $pid
+        // resolves to '/proc/', which always exists, that would falsely report a
+        // backup as running forever and block every future run. Treat it as stale.
+        if ($pid === '') {
+            @unlink($runningPath);
+            return false;
+        }
+
         if (file_exists('/proc/' . $pid)) {
             return true;
         } else {

@@ -38,6 +38,25 @@ class ERHelperTest extends TestCase {
         $this->assertFalse(ERHelper::isBackupRunning(), 'No running file means not running');
     }
 
+    public function testIsBackupRunningFalseForEmptyFileAndRemovesIt(): void {
+        $runningPath = ERSettings::getStateRsyncRunningFilePath();
+        // An empty running file used to make '/proc/' . '' -> '/proc/' (always exists),
+        // falsely reporting a backup as running forever.
+        file_put_contents($runningPath, '');
+
+        $this->assertFalse(ERHelper::isBackupRunning(), 'An empty running file must not report as running');
+        $this->assertFileDoesNotExist($runningPath, 'A stale (empty) running file should be removed');
+    }
+
+    public function testIsBackupRunningFalseForNonNumericFileAndRemovesIt(): void {
+        $runningPath = ERSettings::getStateRsyncRunningFilePath();
+        // Non-numeric content reduces to '' after stripping non-digits.
+        file_put_contents($runningPath, "not-a-pid\n");
+
+        $this->assertFalse(ERHelper::isBackupRunning(), 'A non-numeric running file must not report as running');
+        $this->assertFileDoesNotExist($runningPath, 'A stale (garbage) running file should be removed');
+    }
+
     public function testKillRunningRsyncFalseWhenNoPidFile(): void {
         $this->assertFalse(ERHelper::killRunningRsync(), 'No pid file means nothing to kill');
     }
