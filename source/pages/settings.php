@@ -72,27 +72,42 @@ if ($_POST) {
     }
 }
 
+$cronWarning = null;
 if ($_POST) {
     list($outString, $returnCode) = ERSettings::updateCron();
+
+    // If the user chose a schedule but the time settings were missing/invalid,
+    // updateCron() removed the cron entry (instead of writing a malformed line that
+    // cron would silently reject). Surface that so backups aren't silently disabled.
+    $savedConfig = ERSettings::getUserConfig();
+    $chosenFrequency = $savedConfig['backupFrequency'] ?? 'disabled';
+    if ($chosenFrequency !== 'disabled' && ERSettings::buildCronString($savedConfig) === null) {
+        $cronWarning = 'Backup schedule was NOT applied: the selected frequency has missing or invalid '
+            . 'time settings. Scheduled backups stay disabled until this is corrected.';
+    }
 }
 
 $userConfig = ERSettings::getUserConfig();
 $syncList = SyncList::fromFile();
 
-function bool_to_str($val): string {
-    if ($val === true) return "true";
-    if ($val === false) return "false";
-    return $val;
-}
+// Guarded so the page can be safely included more than once in a single request
+// (e.g. by tests) without a "cannot redeclare function" fatal.
+if (!function_exists(__NAMESPACE__ . '\\bool_to_str')) {
+    function bool_to_str($val): string {
+        if ($val === true) return "true";
+        if ($val === false) return "false";
+        return $val;
+    }
 
-/**
- * HTML-escape a user-controlled value before echoing it into an attribute or
- * element body. Without this, a value containing a quote breaks out of the field
- * (e.g. a custom rsync flag like --rsh="ssh -p 2222") and angle brackets in a path
- * break out of a <textarea> - both a display/corruption bug and an XSS vector.
- */
-function h($value): string {
-    return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
+    /**
+     * HTML-escape a user-controlled value before echoing it into an attribute or
+     * element body. Without this, a value containing a quote breaks out of the field
+     * (e.g. a custom rsync flag like --rsh="ssh -p 2222") and angle brackets in a path
+     * break out of a <textarea> - both a display/corruption bug and an XSS vector.
+     */
+    function h($value): string {
+        return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
+    }
 }
 
 ?>
@@ -145,6 +160,11 @@ function h($value): string {
 
 
 <form id="erSettingsForm" method="post">
+    <?php if ($cronWarning !== null) { ?>
+    <div class="remove-confirm" style="max-width:none; margin-bottom:15px;">
+        <p style="margin:0;"><strong>⚠ <?= h($cronWarning) ?></strong></p>
+    </div>
+    <?php } ?>
     <div class="title">
         <div style="display: flex; justify-content: space-between; width: 100%">
             <span>General Settings</span>
@@ -330,19 +350,19 @@ function h($value): string {
 
         <dt>Hour</dt>
         <dd>
-            <input type="number" min="0" max="23" id="frequencyHour" name="frequencyHour" value="<?= h($userConfig["frequencyHour"]) ?>">
+            <input type="number" min="0" max="23" required id="frequencyHour" name="frequencyHour" value="<?= h($userConfig["frequencyHour"]) ?>">
         </dd>
 
         <dt>Minute</dt>
         <dd>
-            <input type="number" min="0" max="59" id="frequencyMinute" name="frequencyMinute" value="<?= h($userConfig["frequencyMinute"]) ?>">
+            <input type="number" min="0" max="59" required id="frequencyMinute" name="frequencyMinute" value="<?= h($userConfig["frequencyMinute"]) ?>">
         </dd>
     </dl>
 
     <dl>
         <dt>Custom Entry</dt>
         <dd>
-            <input type="text" id="frequencyCustom" name="frequencyCustom"
+            <input type="text" id="frequencyCustom" name="frequencyCustom" required
                    value="<?= h($userConfig["frequencyCustom"]) ?>" placeholder="Will disable other time options">
         </dd>
     </dl>

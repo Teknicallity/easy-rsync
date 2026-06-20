@@ -137,20 +137,61 @@ class ERSettings {
         self::savePaths($paths);
     }
 
+    /** True if $value is a non-negative integer string within [$min, $max]. */
+    private static function isIntInRange(mixed $value, int $min, int $max): bool {
+        $s = trim((string)($value ?? ''));
+        if ($s === '' || !ctype_digit($s)) {
+            return false;
+        }
+        $n = (int)$s;
+        return $n >= $min && $n <= $max;
+    }
+
+    /**
+     * Validate a user-supplied custom cron expression. Returns the trimmed
+     * expression if it is a single @-shortcut (@daily, @hourly, ...) or exactly five
+     * whitespace-separated time fields; otherwise null. Rejects newlines so a value
+     * cannot inject extra cron lines or produce a malformed file.
+     */
+    private static function validateCustomCron(string $expr): ?string {
+        $expr = trim($expr);
+        if ($expr === '' || strpbrk($expr, "\r\n") !== false) {
+            return null;
+        }
+        if ($expr[0] === '@') {
+            return preg_match('/^@\w+$/', $expr) === 1 ? $expr : null;
+        }
+        return count(preg_split('/\s+/', $expr)) === 5 ? $expr : null;
+    }
+
+    /**
+     * Build the cron time-field string for the configured frequency. Every field is
+     * validated server-side; if any required field is missing or out of range the
+     * method returns null so updateCron() removes the cron entry instead of writing a
+     * malformed line (e.g. an empty minute would yield " 0 * * *", which cron rejects
+     * -- silently disabling the scheduled backup).
+     */
     public static function buildCronString(array $userConfig): ?string {
         $frequency = $userConfig['backupFrequency'] ?? null;
-        $minute = $userConfig['frequencyMinute'] ?? '';
-        $hour = $userConfig['frequencyHour'] ?? '';
+        $minute = trim((string)($userConfig['frequencyMinute'] ?? ''));
+        $hour = trim((string)($userConfig['frequencyHour'] ?? ''));
 
-        $schedule = match ($frequency) {
-            'custom'  => $userConfig['frequencyCustom'] ?? '',
-            'daily'   => "$minute $hour * * *",
-            'weekly'  => "$minute $hour * * " . ($userConfig['frequencyWeekday'] ?? ''),
-            'monthly' => "$minute $hour " . ($userConfig['frequencyDayOfMonth'] ?? '') . ' * *',
-            default   => null,
-        };
+        $timeOk = self::isIntInRange($minute, 0, 59) && self::isIntInRange($hour, 0, 23);
 
-        return ($schedule === null || $schedule === '') ? null : $schedule;
+        switch ($frequency) {
+            case 'custom':
+                return self::validateCustomCron((string)($userConfig['frequencyCustom'] ?? ''));
+            case 'daily':
+                return $timeOk ? "$minute $hour * * *" : null;
+            case 'weekly':
+                $weekday = trim((string)($userConfig['frequencyWeekday'] ?? ''));
+                return ($timeOk && self::isIntInRange($weekday, 0, 7)) ? "$minute $hour * * $weekday" : null;
+            case 'monthly':
+                $dayOfMonth = trim((string)($userConfig['frequencyDayOfMonth'] ?? ''));
+                return ($timeOk && self::isIntInRange($dayOfMonth, 1, 31)) ? "$minute $hour $dayOfMonth * *" : null;
+            default:
+                return null;
+        }
     }
 
     public static function updateCron(): array {

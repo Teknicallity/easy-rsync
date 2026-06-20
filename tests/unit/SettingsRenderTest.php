@@ -21,14 +21,19 @@ class SettingsRenderTest extends TestCase {
     protected function tearDown(): void {
         @unlink($this->cfgPath);
         @unlink($this->pathsPath);
+        @unlink(ERSettings::getConfigDir() . '/easy.rsync.cron');
         Logger::resetInstance();
     }
 
-    private function render(): string {
-        $_POST = [];
-        ob_start();
-        include dirname(__DIR__, 2) . '/source/pages/settings.php';
-        return (string) ob_get_clean();
+    private function render(array $post = []): string {
+        $_POST = $post;
+        try {
+            ob_start();
+            include dirname(__DIR__, 2) . '/source/pages/settings.php';
+            return (string) ob_get_clean();
+        } finally {
+            $_POST = [];
+        }
     }
 
     public function testSettingsPageEscapesUserControlledValues(): void {
@@ -83,5 +88,24 @@ class SettingsRenderTest extends TestCase {
 
         // Per-entry custom rsync flags (quotes + angle brackets).
         $this->assertStringContainsString('--z=&quot;q&quot;&lt;b&gt;', $html);
+    }
+
+    public function testInvalidCustomScheduleShowsWarning(): void {
+        // A malformed custom cron (4 fields, not 5) is rejected server-side; the user
+        // must be told the schedule was not applied rather than left silently disabled.
+        $html = $this->render([
+            'backupFrequency' => 'custom',
+            'frequencyCustom' => '0 3 * *',
+        ]);
+        $this->assertStringContainsString('Backup schedule was NOT applied', $html);
+    }
+
+    public function testValidScheduleShowsNoWarning(): void {
+        $html = $this->render([
+            'backupFrequency' => 'daily',
+            'frequencyMinute' => '30',
+            'frequencyHour'   => '3',
+        ]);
+        $this->assertStringNotContainsString('Backup schedule was NOT applied', $html);
     }
 }

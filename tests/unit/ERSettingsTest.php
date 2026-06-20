@@ -133,6 +133,108 @@ class ERSettingsTest extends TestCase {
         ]));
     }
 
+    public function testBuildCronStringDailyEmptyMinuteReturnsNull(): void {
+        // Regression: an empty enabled minute used to yield " 0 * * *" (a malformed,
+        // silently-ignored cron line). It must return null instead.
+        $this->assertNull(ERSettings::buildCronString([
+            'backupFrequency' => 'daily',
+            'frequencyMinute' => '',
+            'frequencyHour' => '0',
+        ]));
+    }
+
+    public function testBuildCronStringDailyBlankHourReturnsNull(): void {
+        $this->assertNull(ERSettings::buildCronString([
+            'backupFrequency' => 'daily',
+            'frequencyMinute' => '30',
+            'frequencyHour' => '   ',
+        ]));
+    }
+
+    public function testBuildCronStringDailyOutOfRangeReturnsNull(): void {
+        $this->assertNull(ERSettings::buildCronString([
+            'backupFrequency' => 'daily',
+            'frequencyMinute' => '60', // valid range is 0-59
+            'frequencyHour' => '3',
+        ]));
+        $this->assertNull(ERSettings::buildCronString([
+            'backupFrequency' => 'daily',
+            'frequencyMinute' => '30',
+            'frequencyHour' => '24', // valid range is 0-23
+        ]));
+    }
+
+    public function testBuildCronStringNonNumericMinuteReturnsNull(): void {
+        $this->assertNull(ERSettings::buildCronString([
+            'backupFrequency' => 'daily',
+            'frequencyMinute' => '*',
+            'frequencyHour' => '3',
+        ]));
+    }
+
+    public function testBuildCronStringWeeklyInvalidWeekdayReturnsNull(): void {
+        $this->assertNull(ERSettings::buildCronString([
+            'backupFrequency' => 'weekly',
+            'frequencyMinute' => '30',
+            'frequencyHour' => '3',
+            'frequencyWeekday' => '9', // valid range is 0-7
+        ]));
+    }
+
+    public function testBuildCronStringMonthlyInvalidDayReturnsNull(): void {
+        $this->assertNull(ERSettings::buildCronString([
+            'backupFrequency' => 'monthly',
+            'frequencyMinute' => '30',
+            'frequencyHour' => '3',
+            'frequencyDayOfMonth' => '0', // valid range is 1-31
+        ]));
+    }
+
+    public function testBuildCronStringMonthlyBoundaryDaysAreValid(): void {
+        $this->assertSame('0 0 1 * *', ERSettings::buildCronString([
+            'backupFrequency' => 'monthly',
+            'frequencyMinute' => '0',
+            'frequencyHour' => '0',
+            'frequencyDayOfMonth' => '1',
+        ]));
+        $this->assertSame('59 23 31 * *', ERSettings::buildCronString([
+            'backupFrequency' => 'monthly',
+            'frequencyMinute' => '59',
+            'frequencyHour' => '23',
+            'frequencyDayOfMonth' => '31',
+        ]));
+    }
+
+    public function testBuildCronStringCustomMalformedFieldCountReturnsNull(): void {
+        // Four fields instead of five -> malformed -> rejected.
+        $this->assertNull(ERSettings::buildCronString([
+            'backupFrequency' => 'custom',
+            'frequencyCustom' => '0 3 * *',
+        ]));
+    }
+
+    public function testBuildCronStringCustomRejectsNewlineInjection(): void {
+        $this->assertNull(ERSettings::buildCronString([
+            'backupFrequency' => 'custom',
+            'frequencyCustom' => "0 3 * * *\n* * * * * rm -rf /",
+        ]));
+    }
+
+    public function testBuildCronStringCustomAllowsShortcut(): void {
+        $this->assertSame('@daily', ERSettings::buildCronString([
+            'backupFrequency' => 'custom',
+            'frequencyCustom' => '@daily',
+        ]));
+    }
+
+    public function testBuildCronStringCustomNormalizesWhitespace(): void {
+        // Extra/leading whitespace is tolerated as long as there are five fields.
+        $this->assertSame('0  */4 * * *', ERSettings::buildCronString([
+            'backupFrequency' => 'custom',
+            'frequencyCustom' => '  0  */4 * * *  ',
+        ]));
+    }
+
     public function testBuildCronStringDisabledReturnsNull(): void {
         $this->assertNull(ERSettings::buildCronString(['backupFrequency' => 'disabled']));
     }
