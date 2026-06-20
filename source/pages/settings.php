@@ -85,6 +85,16 @@ function bool_to_str($val): string {
     return $val;
 }
 
+/**
+ * HTML-escape a user-controlled value before echoing it into an attribute or
+ * element body. Without this, a value containing a quote breaks out of the field
+ * (e.g. a custom rsync flag like --rsh="ssh -p 2222") and angle brackets in a path
+ * break out of a <textarea> - both a display/corruption bug and an XSS vector.
+ */
+function h($value): string {
+    return htmlspecialchars((string)($value ?? ''), ENT_QUOTES, 'UTF-8');
+}
+
 ?>
 <link type="text/css" rel="stylesheet" href="<?php autov('/webGui/styles/jquery.filetree.css') ?>">
 <script src="<?php autov('/webGui/javascript/jquery.filetree.js') ?>" charset="utf-8"></script>
@@ -211,7 +221,7 @@ function bool_to_str($val): string {
         <dt>Custom Rsync Parameters</dt>
         <dd>
             <input type="text" id="rsyncCustom" name="rsyncCustom" oninput="updateGlobalRsyncOptions();"
-                   value="<?= $userConfig["rsyncCustom"] ?>" class="rsyncCustomParam globalOption"
+                   value="<?= h($userConfig["rsyncCustom"]) ?>" class="rsyncCustomParam globalOption"
                    placeholder="Will override other Rsync options">
         </dd>
     </dl>
@@ -320,12 +330,12 @@ function bool_to_str($val): string {
 
         <dt>Hour</dt>
         <dd>
-            <input type="number" min="0" max="23" id="frequencyHour" name="frequencyHour" value="<?= $userConfig["frequencyHour"] ?>">
+            <input type="number" min="0" max="23" id="frequencyHour" name="frequencyHour" value="<?= h($userConfig["frequencyHour"]) ?>">
         </dd>
 
         <dt>Minute</dt>
         <dd>
-            <input type="number" min="0" max="59" id="frequencyMinute" name="frequencyMinute" value="<?= $userConfig["frequencyMinute"] ?>">
+            <input type="number" min="0" max="59" id="frequencyMinute" name="frequencyMinute" value="<?= h($userConfig["frequencyMinute"]) ?>">
         </dd>
     </dl>
 
@@ -333,7 +343,7 @@ function bool_to_str($val): string {
         <dt>Custom Entry</dt>
         <dd>
             <input type="text" id="frequencyCustom" name="frequencyCustom"
-                   value="<?= $userConfig["frequencyCustom"] ?>" placeholder="Will disable other time options">
+                   value="<?= h($userConfig["frequencyCustom"]) ?>" placeholder="Will disable other time options">
         </dd>
     </dl>
     <blockquote class="inline_help">
@@ -354,7 +364,7 @@ function bool_to_str($val): string {
                         <textarea name="syncEntries[<?= (int)$index; ?>][sources]"
                                   onfocus="$(this).next('.ft').slideDown('fast');"
                                   style="resize: vertical; width: 400px;"
-                                  rows="3"><?= implode("\r\n", $syncEntry->sources) ?></textarea>
+                                  rows="3"><?= h(implode("\r\n", $syncEntry->sources)) ?></textarea>
                         <div class="ft" style="display: none;">
                             <div class="fileTreeDiv"></div>
                             <button onclick="addSelectionToList(this);  return false;">Add to sources</button>
@@ -376,7 +386,7 @@ function bool_to_str($val): string {
                         <textarea name="syncEntries[<?= (int)$index; ?>][destinations]"
                                   onfocus="$(this).next('.ft').slideDown('fast');"
                                   style="resize: vertical; width: 400px;"
-                                  rows="3"><?= implode("\r\n", $syncEntry->destinations) ."\r\n" ?></textarea>
+                                  rows="3"><?= h(implode("\r\n", $syncEntry->destinations) ."\r\n") ?></textarea>
                         <!-- <div class="ft" style="display: none;">
                             <button onclick="">Add to hosts</button>
                         </div> -->
@@ -483,7 +493,7 @@ function bool_to_str($val): string {
                         <input type="text" name="syncEntries[<?= (int)$index; ?>][rsyncOptions][rsyncCustom]"
                                class="rsyncCustomParam entryOption"
                                oninput="updateSyncEntryRsyncOptions(this.closest('.sync-entry'));"
-                               value="<?= $syncEntry->rsyncOptions?->rsyncCustom ?? $userConfig["rsyncCustom"] ?>"
+                               value="<?= h($syncEntry->rsyncOptions?->rsyncCustom ?? $userConfig["rsyncCustom"]) ?>"
                                placeholder="Will override other Rsync options">
                     </dd>
                 </dl>
@@ -760,7 +770,7 @@ function bool_to_str($val): string {
                             <input type="text" name="syncEntries[${syncEntryIndex}][rsyncOptions][rsyncCustom]"
                                    class="rsyncCustomParam entryOption"
                                    oninput="updateSyncEntryRsyncOptions(this.closest('.sync-entry'));"
-                                   value="<?= $userConfig["rsyncCustom"] ?>"
+                                   value="<?= h($userConfig["rsyncCustom"]) ?>"
                                    placeholder="Will override other Rsync options">
                         </dd>
                     </dl>
