@@ -68,31 +68,6 @@ class ERSettingsTest extends TestCase {
         $this->assertSame('summary', $loaded['notificationMode']);
     }
 
-    public function testGetPathsReturnsEmptyArraysWhenFileMissing(): void {
-        $paths = ERSettings::getPaths();
-        $this->assertSame(['sources' => [], 'destinations' => []], $paths);
-    }
-
-    public function testSaveAndGetPathsRoundTrip(): void {
-        ERSettings::saveSourcesAndDestinations(
-            ['/mnt/user/share1', '/mnt/user/share2'],
-            ['user@host:/backups']
-        );
-        $paths = ERSettings::getPaths();
-        $this->assertSame(['/mnt/user/share1', '/mnt/user/share2'], array_values($paths['sources']));
-        $this->assertSame(['user@host:/backups'], array_values($paths['destinations']));
-    }
-
-    public function testSaveSourcesAndDestinationsTrimsAndDropsEmpty(): void {
-        ERSettings::saveSourcesAndDestinations(
-            ['  /a  ', '', '/b'],
-            ['user@host:/c', '  ']
-        );
-        $paths = ERSettings::getPaths();
-        $this->assertSame(['/a', '/b'], array_values($paths['sources']));
-        $this->assertSame(['user@host:/c'], array_values($paths['destinations']));
-    }
-
     public function testBuildCronStringDaily(): void {
         $this->assertSame('30 3 * * *', ERSettings::buildCronString([
             'backupFrequency' => 'daily',

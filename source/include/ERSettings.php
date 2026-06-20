@@ -97,46 +97,6 @@ class ERSettings {
         return self::getTempDir() . '/' . self::$stateRsyncPidFileName;
     }
 
-    private static function savePaths(array $paths): bool|int {
-        return file_put_contents(self::getPathsJsonFilePath(), json_encode($paths, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
-    }
-
-    public static function getPaths(): array {
-        $filePath = self::getPathsJsonFilePath();
-        
-        if (file_exists($filePath)) {
-            $paths = json_decode(file_get_contents($filePath), true);
-        }
-
-        $sources = isset($paths['sources']) ? (array) $paths['sources'] : [];
-        $destinations = isset($paths['destinations']) ? (array) $paths['destinations'] : [];
-
-        return [
-            'sources' => $sources,
-            'destinations' => $destinations
-        ];
-    }
-
-    public static function saveSourcesAndDestinations(array $sources = null, array $destinations = null): void {
-        if (empty($sources) && empty($destinations)) {
-            return;
-        }
-    
-        $paths = self::getPaths();
-    
-        if (!empty($sources)) {
-            $trimmedSources = array_map('trim', $sources);
-            $paths['sources'] = array_filter($trimmedSources, 'strlen');
-        }
-    
-        if (!empty($destinations)) {
-            $trimmedDestinations = array_map('trim', $destinations);
-            $paths['destinations'] = array_filter($trimmedDestinations, 'strlen');
-        }
-    
-        self::savePaths($paths);
-    }
-
     /** True if $value is a non-negative integer string within [$min, $max]. */
     private static function isIntInRange(mixed $value, int $min, int $max): bool {
         $s = trim((string)($value ?? ''));
