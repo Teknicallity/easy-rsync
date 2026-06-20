@@ -126,6 +126,15 @@ function handleFinalSummary(SyncList $syncList, bool $useEmojis): never {
     $backupTime = $backupStartedTime->diff($backupFinishedTime);
     $duration = $backupTime->format('%H:%I:%S');
 
+    // No entry produced a result (the sync list is empty). Nothing ran, so finish
+    // cleanly rather than feeding null into the match below (which has no default arm
+    // and would throw \UnhandledMatchError).
+    if ($syncList->finalStatus === null) {
+        $logger->warning("No sync entries were processed (empty sync list). Took " . $duration);
+        cleanup();
+        exit(0);
+    }
+
     $subject = match ($syncList->finalStatus) {
         SyncStatus::Success => "Sync Completed",
         SyncStatus::Failed => "Sync Completed with Errors",

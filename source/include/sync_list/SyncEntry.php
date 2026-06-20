@@ -77,6 +77,28 @@ class SyncEntry {
 
         $this->results = [];
         $pairs = $this->generatePairs();
+
+        // An entry with no source/destination pairs (e.g. a source set but the
+        // destination left blank, or vice-versa) has nothing to sync. Record it and
+        // return a real status here instead of falling through to the final
+        // `return $this->finalStatus` while it is still null -- returning null would
+        // violate the declared SyncStatus return type and abort the whole run with a
+        // fatal TypeError.
+        if (empty($pairs)) {
+            self::$logger->warning(
+                "Sync entry has no source/destination pairs to sync; skipping. "
+                . "Ensure both sources and destinations are set."
+            );
+            $this->results[] = new SyncResult(
+                implode(', ', $this->sources),
+                implode(', ', $this->destinations),
+                SyncStatus::Skipped,
+                'No source/destination pairs to sync'
+            );
+            $this->finalStatus = SyncStatus::Skipped;
+            return $this->finalStatus;
+        }
+
         if ($this->rsyncOptions === null) {
             $userConfig = ERSettings::getUserConfig();
             $rsyncOptions = RsyncOptions::fromArray($userConfig);

@@ -146,4 +146,45 @@ class SyncEntryTest extends TestCase {
         $entry->sync(fn() => false, true);
         $this->assertStringContainsString('--dry-run', $syncer->opts);
     }
+
+    public function testEntryWithNoDestinationsIsSkippedAndDoesNotCrash(): void {
+        $syncer = new class implements Syncer {
+            public int $calls = 0;
+            public function performSync(string $source, string $destination, string $rsyncOptions): void {
+                $this->calls++;
+            }
+        };
+
+        // A source set but the destination left blank -> no source/destination pairs.
+        // This used to return null and trip the SyncStatus return type (fatal TypeError).
+        $entry = new SyncEntry(['/src'], [], RsyncOptions::fromArray([]));
+        $entry->syncer = $syncer;
+
+        $status = $entry->sync(fn() => false, false);
+
+        $this->assertSame(SyncStatus::Skipped, $status, 'A no-pair entry must return Skipped, never null');
+        $this->assertSame(SyncStatus::Skipped, $entry->finalStatus);
+        $this->assertSame(0, $syncer->calls, 'Nothing should be synced when there are no pairs');
+        $this->assertCount(1, $entry->results);
+        $this->assertSame(SyncStatus::Skipped, $entry->results[0]->status);
+        $this->assertSame('No source/destination pairs to sync', $entry->results[0]->error);
+    }
+
+    public function testEntryWithNoSourcesOrDestinationsIsSkipped(): void {
+        $syncer = new class implements Syncer {
+            public int $calls = 0;
+            public function performSync(string $source, string $destination, string $rsyncOptions): void {
+                $this->calls++;
+            }
+        };
+
+        $entry = new SyncEntry([], [], RsyncOptions::fromArray([]));
+        $entry->syncer = $syncer;
+
+        $status = $entry->sync(fn() => false, false);
+
+        $this->assertSame(SyncStatus::Skipped, $status);
+        $this->assertSame(0, $syncer->calls);
+        $this->assertCount(1, $entry->results);
+    }
 }
