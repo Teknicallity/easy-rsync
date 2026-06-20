@@ -3,7 +3,7 @@
   <!ENTITY repoName     "easy-rsync">
   <!ENTITY pluginName   "easy.rsync.beta">
   <!ENTITY gitUser      "Teknicallity">
-  <!ENTITY version      "2026.06.13.b1">
+  <!ENTITY version      "2026.06.20.b1">
   <!ENTITY gitBranch    "dev">
   <!ENTITY repoLocation "https://github.com/&gitUser;/&repoName;/raw/&gitBranch;">
   <!ENTITY releaseLocation "https://github.com/&gitUser;/&repoName;/releases/download/&version;">
@@ -24,6 +24,13 @@
 
 <CHANGES>
 ## &pluginName;
+
+### 2026.06.20.b1
+- Fix: a sync job with a blank source or destination no longer crashes the whole backup run
+- Fix: a leftover "running" state from an interrupted run no longer permanently blocks new backups
+- Fix: an invalid or incomplete schedule now shows a warning instead of silently disabling scheduled backups; the Hour and Minute fields are now required
+- Fix: custom rsync parameters or paths containing quotes or other special characters no longer break the Settings form
+- Fix: log entries containing special characters (e.g. unusual file names) now display safely in the log tabs
 
 ### 2026.06.13.b1
 - New: "Test Connection" button on each sync job that checks an SSH destination's connection and whether rsync is installed on the remote (and that a local path is writable)
