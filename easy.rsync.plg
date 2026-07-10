@@ -25,6 +25,14 @@
 <CHANGES>
 ## &pluginName;
 
+### 2026.07.09
+- Security: log output is now HTML-escaped, so a malicious filename inside a backed-up share can no longer run script in your browser when you view the logs
+- Security: settings fields (paths, custom rsync parameters) are now HTML-escaped, fixing both a display glitch and a cross-site scripting risk when a value contains quotes or special characters
+- Fix: invalid or missing schedule times no longer silently disable scheduled backups; the schedule form now requires the needed fields and warns you when a schedule could not be applied
+- Fix: a sync job with a source but no matching destination (or vice versa) is now skipped with a warning instead of aborting the whole backup run
+- Fix: a stale or empty "running" marker no longer makes Easy Rsync think a backup is stuck running and block all future runs
+- Fix: running a backup with an empty sync list now finishes cleanly instead of erroring
+
 ### 2026.06.13
 - New: "Force Stop" (immediately kills the running transfer) alongside "Graceful Stop", with a confirmation prompt and a notification when a stop is requested
 - New: "Test Connection" button per sync job (checks SSH reachability and remote rsync, or a local path's writability)
