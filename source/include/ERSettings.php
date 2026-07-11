@@ -2,7 +2,9 @@
 
 namespace unraid\plugins\EasyRsync;
 
-$docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: '/usr/local/emhttp';
+// EASY_RSYNC_DOCROOT: test override so CLI subprocesses (cron/backup script have an
+// empty DOCUMENT_ROOT) can resolve a stub webGui tree instead of /usr/local/emhttp.
+$docroot = $docroot ?? $_SERVER['DOCUMENT_ROOT'] ?: getenv('EASY_RSYNC_DOCROOT') ?: '/usr/local/emhttp';
 
 require_once "$docroot/webGui/include/Wrappers.php";
 
@@ -16,6 +18,11 @@ class ERSettings {
     private static string $stateRsyncAbortedFileName = 'aborted';
     private static string $stateRsyncPidFileName = 'rsync.pid';
     public static string $emhttpVars = '/var/local/emhttp/var.ini';
+
+    /** Path to Unraid's emhttp var.ini (env override for tests, like the dirs below). */
+    public static function getEmhttpVarsPath(): string {
+        return getenv('EASY_RSYNC_EMHTTP_VARS') ?: self::$emhttpVars;
+    }
 
     public static function getConfigDir() : string {
         return getenv('EASY_RSYNC_CONFIG_DIR') ?: '/boot/config/plugins/' . self::$appName;

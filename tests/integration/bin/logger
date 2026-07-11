@@ -1,0 +1,6 @@
+#!/bin/sh
+# Test shim for the syslog `logger` command: records instead of writing to syslog.
+if [ -n "$EASY_RSYNC_SHIM_LOG_DIR" ]; then
+    printf 'logger %s\n' "$*" >> "$EASY_RSYNC_SHIM_LOG_DIR/logger.log"
+fi
+exit 0

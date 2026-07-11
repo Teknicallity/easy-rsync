@@ -35,7 +35,7 @@ class ERHelper {
     }
 
     public static function isArrayOnline(): bool {
-        $emhttpVars = parse_ini_file(ERSettings::$emhttpVars);
+        $emhttpVars = parse_ini_file(ERSettings::getEmhttpVarsPath());
         if ($emhttpVars && $emhttpVars['fsState'] == 'Started') {
             return true;
         }

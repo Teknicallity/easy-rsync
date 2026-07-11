@@ -1,0 +1,7 @@
+#!/bin/sh
+# Test shim for Unraid's notify script (pointed at via EASY_RSYNC_NOTIFY_SCRIPT):
+# records each invocation's arguments so tests can assert on notifications.
+if [ -n "$EASY_RSYNC_SHIM_LOG_DIR" ]; then
+    printf 'notify %s\n' "$*" >> "$EASY_RSYNC_SHIM_LOG_DIR/notify.log"
+fi
+exit 0

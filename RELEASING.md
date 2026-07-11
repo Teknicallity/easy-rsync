@@ -60,6 +60,8 @@ break same-day ties in order: `2026.05.30` < `2026.05.30a` < `2026.05.30b`, and
 Pre-reqs:
 
 - `composer test` passes locally (see [README.md#tests](README.md#tests)).
+- Recommended: `composer test:e2e` passes against a test server running the
+  current beta (see [tests/e2e/README.md](tests/e2e/README.md)).
 - The channel's `.plg` `<CHANGES>` block has a `### <version>` entry for the version
   you're about to tag; the release body is pulled from it (no entry -> the workflow
   falls back to GitHub's auto-generated notes).

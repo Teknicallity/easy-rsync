@@ -5,6 +5,9 @@ namespace unraid\plugins\EasyRsync;
 require_once __DIR__ ."/Syncer.php";
 require_once dirname(__DIR__) . "/ERSettings.php";
 require_once dirname(__DIR__) . "/Logger.php";
+// Required explicitly: on Unraid there is no autoloader, and throwing an
+// unloaded class is itself a fatal "Class not found" error.
+require_once dirname(__DIR__) . "/exceptions/RsyncFailureException.php";
 
 use unraid\plugins\EasyRsync\Exceptions\RsyncFailureException;
 use unraid\plugins\EasyRsync\Syncer;

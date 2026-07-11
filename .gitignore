@@ -5,3 +5,4 @@
 /backup_paths.json
 /vendor
 /.phpunit.cache
+/tests/e2e/.env

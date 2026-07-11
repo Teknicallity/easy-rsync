@@ -1,0 +1,6 @@
+#!/bin/sh
+# Test shim for Unraid's update_cron: records the call so tests can assert it ran.
+if [ -n "$EASY_RSYNC_SHIM_LOG_DIR" ]; then
+    printf 'update_cron %s\n' "$*" >> "$EASY_RSYNC_SHIM_LOG_DIR/update_cron.log"
+fi
+exit 0

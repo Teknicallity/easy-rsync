@@ -35,7 +35,7 @@ The plugin appears under Settings -> Easy Rsync (Beta).
 
 ## Tests
 
-PHPUnit suite under `tests/`.
+PHPUnit suites under `tests/`.
 
 First-time setup (or after deleting `vendor/`):
 
@@ -43,13 +43,16 @@ First-time setup (or after deleting `vendor/`):
 composer install
 ```
 
-Run the suite:
+Run the suites:
 
 ```bash
-composer test
+composer test              # unit + integration (also run in CI on push/PR)
+composer test:unit         # unit only
+composer test:integration  # integration only (real rsync against temp dirs)
+composer test:e2e          # drives a live Unraid server - see tests/e2e/README.md
 ```
 
-Equivalent to `./vendor/bin/phpunit`.
+`composer test` is equivalent to `./vendor/bin/phpunit`.
 
 ## Releasing
 

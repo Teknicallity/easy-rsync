@@ -5,7 +5,13 @@
     "autoload": {
         "classmap": ["source/include/"]
     },
+    "autoload-dev": {
+        "classmap": ["tests/integration/support/", "tests/e2e/support/"]
+    },
     "scripts": {
-        "test": "phpunit"
+        "test": "phpunit",
+        "test:unit": "phpunit --testsuite unit",
+        "test:integration": "phpunit --testsuite integration",
+        "test:e2e": "phpunit -c tests/e2e/phpunit.e2e.xml"
     }
 }

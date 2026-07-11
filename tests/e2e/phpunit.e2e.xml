@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Separate config so the e2e suite never runs as part of a plain `phpunit`:
+     it drives a real Unraid server (see tests/e2e/README.md). -->
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="../../vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="bootstrap.php"
+         colors="true"
+         cacheDirectory="../../.phpunit.cache"
+         failOnWarning="true"
+         failOnNotice="true">
+    <testsuites>
+        <!-- Explicit file order: PreflightTest first, so environment problems fail
+             with a clear message before the behavioural (and mutating) classes. -->
+        <testsuite name="e2e">
+            <file>cases/PreflightTest.php</file>
+            <file>cases/AuthTest.php</file>
+            <file>cases/HttpHandlerE2ETest.php</file>
+            <file>cases/BackupFlowE2ETest.php</file>
+            <file>cases/SettingsSaveE2ETest.php</file>
+            <file>cases/AbortE2ETest.php</file>
+            <file>cases/NotificationE2ETest.php</file>
+        </testsuite>
+    </testsuites>
+</phpunit>

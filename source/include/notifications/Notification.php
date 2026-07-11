@@ -42,12 +42,17 @@ class Notification {
         return $this;
     }
 
+    /** Path to Unraid's notify script (env override for tests, like the ERSettings dirs). */
+    private static function getNotifyScript(): string {
+        return getenv('EASY_RSYNC_NOTIFY_SCRIPT') ?: '/usr/local/emhttp/webGui/scripts/notify';
+    }
+
     public function send(): void {
         if ($this->subject === ""){
             return;
         }
 
-        $command = '/usr/local/emhttp/webGui/scripts/notify -e ' . escapeshellarg($this->event) .
+        $command = escapeshellarg(self::getNotifyScript()) . ' -e ' . escapeshellarg($this->event) .
             ' -s ' . escapeshellarg($this->subject) .
             ' -d ' . escapeshellarg($this->description) .
             ' -m ' . escapeshellarg($this->message) .
@@ -72,7 +77,7 @@ class Notification {
         string            $message = "",
         NotificationLevel $level = NotificationLevel::NORMAL): void {
 
-        $command = '/usr/local/emhttp/webGui/scripts/notify -e "Easy Rsync" -s ' . escapeshellarg($subject) . ' ' .
+        $command = escapeshellarg(self::getNotifyScript()) . ' -e "Easy Rsync" -s ' . escapeshellarg($subject) . ' ' .
             '-d ' . escapeshellarg($description) . ' -m ' . escapeshellarg($message) . ' -i ' . $level->value . ' ' .
             '-l ' . escapeshellarg(ERSettings::getPluginPageUrl());
         shell_exec($command);
