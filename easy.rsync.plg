@@ -12,6 +12,7 @@
   <!ENTITY plugin       "/boot/config/plugins/&pluginName;">
   <!ENTITY emhttp       "/usr/local/emhttp/plugins/&pluginName;">
   <!ENTITY md5          "bf5c5c7bafb61834dbbaa6e4f7832b39">
+  <!ENTITY sha256 "ce4ef19c6c47dfb04f37a2ee4a279cf41c87ac68f4e871ce27bd8434b3832447">
 ]>
 <PLUGIN name="&pluginName;" 
         author="Teknicallity" 
@@ -65,6 +66,7 @@ echo "Removed old packages."
 <!--Download image-->
 <FILE Name="&emhttp;/images/hello-world.png">
 <URL>https://raw.githubusercontent.com/&gitUser;/&repoName;/&gitBranch;/images/hello-world.png</URL>
+<SHA256>&sha256;</SHA256>
 </FILE>
 
 <!--The install script.-->
